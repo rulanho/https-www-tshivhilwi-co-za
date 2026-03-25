@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+// Types and mock data for the burial society system
 
 // We'll use zustand-like pattern with React state for now
 // This file contains types and mock data

@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Users, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { getAge } from '@/lib/data';
 
 export default function Households() {
@@ -18,34 +17,30 @@ export default function Households() {
   const [selectedHh, setSelectedHh] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const [hhForm, setHhForm] = useState({ name: '', contactPerson: '', phone: '', address: '' });
-  const [memForm, setMemForm] = useState({ fullName: '', idNumber: '', dateOfBirth: '', relationship: '', householdId: '' });
+  const [hhForm, setHhForm] = useState({ name: '', contact_person: '', phone: '', address: '' });
+  const [memForm, setMemForm] = useState({ full_name: '', id_number: '', date_of_birth: '', relationship: '', household_id: '' });
 
   const filtered = households.filter(h =>
     h.name.toLowerCase().includes(search.toLowerCase()) ||
-    h.contactPerson.toLowerCase().includes(search.toLowerCase())
+    h.contact_person.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAddHousehold = () => {
-    if (!hhForm.name || !hhForm.contactPerson) return;
-    addHousehold({
-      ...hhForm,
-      joinDate: new Date().toISOString().split('T')[0],
-      status: 'active',
-    });
-    setHhForm({ name: '', contactPerson: '', phone: '', address: '' });
+    if (!hhForm.name || !hhForm.contact_person) return;
+    addHousehold({ ...hhForm, status: 'active' });
+    setHhForm({ name: '', contact_person: '', phone: '', address: '' });
     setHhOpen(false);
   };
 
   const handleAddMember = () => {
-    if (!memForm.fullName || !memForm.householdId) return;
+    if (!memForm.full_name || !memForm.household_id) return;
     addMember({ ...memForm, status: 'active' });
-    setMemForm({ fullName: '', idNumber: '', dateOfBirth: '', relationship: '', householdId: '' });
+    setMemForm({ full_name: '', id_number: '', date_of_birth: '', relationship: '', household_id: '' });
     setMemOpen(false);
   };
 
   const viewHousehold = selectedHh ? households.find(h => h.id === selectedHh) : null;
-  const viewMembers = selectedHh ? members.filter(m => m.householdId === selectedHh) : [];
+  const viewMembers = selectedHh ? members.filter(m => m.household_id === selectedHh) : [];
 
   return (
     <div>
@@ -64,7 +59,7 @@ export default function Households() {
               <div className="space-y-3">
                 <div>
                   <Label>Household</Label>
-                  <Select onValueChange={v => setMemForm(f => ({ ...f, householdId: v }))}>
+                  <Select onValueChange={v => setMemForm(f => ({ ...f, household_id: v }))}>
                     <SelectTrigger><SelectValue placeholder="Select household" /></SelectTrigger>
                     <SelectContent>
                       {households.filter(h => h.status === 'active').map(h => (
@@ -73,9 +68,9 @@ export default function Households() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Full Name</Label><Input value={memForm.fullName} onChange={e => setMemForm(f => ({ ...f, fullName: e.target.value }))} /></div>
-                <div><Label>ID Number</Label><Input value={memForm.idNumber} onChange={e => setMemForm(f => ({ ...f, idNumber: e.target.value }))} /></div>
-                <div><Label>Date of Birth</Label><Input type="date" value={memForm.dateOfBirth} onChange={e => setMemForm(f => ({ ...f, dateOfBirth: e.target.value }))} /></div>
+                <div><Label>Full Name</Label><Input value={memForm.full_name} onChange={e => setMemForm(f => ({ ...f, full_name: e.target.value }))} /></div>
+                <div><Label>ID Number</Label><Input value={memForm.id_number} onChange={e => setMemForm(f => ({ ...f, id_number: e.target.value }))} /></div>
+                <div><Label>Date of Birth</Label><Input type="date" value={memForm.date_of_birth} onChange={e => setMemForm(f => ({ ...f, date_of_birth: e.target.value }))} /></div>
                 <div>
                   <Label>Relationship</Label>
                   <Select onValueChange={v => setMemForm(f => ({ ...f, relationship: v }))}>
@@ -99,7 +94,7 @@ export default function Households() {
               <DialogHeader><DialogTitle className="font-display">Register Household</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div><Label>Household Name</Label><Input value={hhForm.name} onChange={e => setHhForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Mokoena Family" /></div>
-                <div><Label>Contact Person</Label><Input value={hhForm.contactPerson} onChange={e => setHhForm(f => ({ ...f, contactPerson: e.target.value }))} /></div>
+                <div><Label>Contact Person</Label><Input value={hhForm.contact_person} onChange={e => setHhForm(f => ({ ...f, contact_person: e.target.value }))} /></div>
                 <div><Label>Phone</Label><Input value={hhForm.phone} onChange={e => setHhForm(f => ({ ...f, phone: e.target.value }))} /></div>
                 <div><Label>Address</Label><Input value={hhForm.address} onChange={e => setHhForm(f => ({ ...f, address: e.target.value }))} /></div>
                 <Button onClick={handleAddHousehold} className="w-full">Register</Button>
@@ -123,10 +118,10 @@ export default function Households() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-muted-foreground">Contact:</span> {viewHousehold.contactPerson}</div>
+                <div><span className="text-muted-foreground">Contact:</span> {viewHousehold.contact_person}</div>
                 <div><span className="text-muted-foreground">Phone:</span> {viewHousehold.phone}</div>
                 <div><span className="text-muted-foreground">Address:</span> {viewHousehold.address}</div>
-                <div><span className="text-muted-foreground">Joined:</span> {viewHousehold.joinDate}</div>
+                <div><span className="text-muted-foreground">Joined:</span> {viewHousehold.join_date}</div>
               </div>
             </CardContent>
           </Card>
@@ -136,8 +131,8 @@ export default function Households() {
               <Card key={m.id}>
                 <CardContent className="flex items-center justify-between py-4">
                   <div>
-                    <p className="font-medium">{m.fullName}</p>
-                    <p className="text-xs text-muted-foreground">{m.relationship} · Age {getAge(m.dateOfBirth)} · ID: {m.idNumber}</p>
+                    <p className="font-medium">{m.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{m.relationship} · {m.date_of_birth ? `Age ${getAge(m.date_of_birth)}` : ''} · ID: {m.id_number}</p>
                   </div>
                   <Badge variant={m.status === 'active' ? 'default' : 'secondary'}>{m.status}</Badge>
                 </CardContent>
@@ -149,7 +144,7 @@ export default function Households() {
       ) : (
         <div className="grid gap-3">
           {filtered.map(h => {
-            const memberCount = members.filter(m => m.householdId === h.id).length;
+            const memberCount = members.filter(m => m.household_id === h.id).length;
             return (
               <Card key={h.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedHh(h.id)}>
                 <CardContent className="flex items-center justify-between py-4">
@@ -159,7 +154,7 @@ export default function Households() {
                     </div>
                     <div>
                       <p className="font-medium">{h.name}</p>
-                      <p className="text-xs text-muted-foreground">{h.contactPerson} · {memberCount} members · Joined {h.joinDate}</p>
+                      <p className="text-xs text-muted-foreground">{h.contact_person} · {memberCount} members · Joined {h.join_date}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

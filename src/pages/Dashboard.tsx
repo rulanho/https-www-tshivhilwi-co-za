@@ -9,10 +9,10 @@ export default function Dashboard() {
 
   const activeHouseholds = households.filter(h => h.status === 'active').length;
   const activeMembers = members.filter(m => m.status === 'active').length;
-  const totalContributions = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
-  const totalPayouts = payouts.reduce((s, p) => s + p.approvedAmount, 0);
+  const totalContributions = payments.filter(p => p.status === 'paid').reduce((s, p) => s + Number(p.amount), 0);
+  const totalPayouts = payouts.reduce((s, p) => s + Number(p.approved_amount), 0);
   const fundsAvailable = totalContributions - totalPayouts;
-  const defaulters = new Set(payments.filter(p => p.status === 'missed').map(p => p.householdId)).size;
+  const defaulters = new Set(payments.filter(p => p.status === 'missed').map(p => p.household_id)).size;
   const pendingCases = burialCases.filter(c => c.status === 'pending').length;
 
   const stats = [
@@ -24,7 +24,7 @@ export default function Dashboard() {
     { label: 'Defaulters', value: defaulters, icon: AlertTriangle, warn: defaulters > 0 },
   ];
 
-  const recentPayments = [...payments].filter(p => p.status === 'paid').sort((a, b) => b.paymentDate.localeCompare(a.paymentDate)).slice(0, 5);
+  const recentPayments = [...payments].filter(p => p.status === 'paid').sort((a, b) => (b.payment_date || '').localeCompare(a.payment_date || '')).slice(0, 5);
 
   return (
     <div>
@@ -58,14 +58,14 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {recentPayments.map(p => {
-                  const hh = households.find(h => h.id === p.householdId);
+                  const hh = households.find(h => h.id === p.household_id);
                   return (
                     <div key={p.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
                       <div>
-                        <p className="font-medium text-sm">{hh?.name || p.householdId}</p>
-                        <p className="text-xs text-muted-foreground">{p.paymentMonth} · {p.paymentMethod.toUpperCase()}</p>
+                        <p className="font-medium text-sm">{hh?.name || p.household_id}</p>
+                        <p className="text-xs text-muted-foreground">{p.payment_month} · {(p.payment_method || '').toUpperCase()}</p>
                       </div>
-                      <span className="font-semibold text-sm">{formatCurrency(p.amount)}</span>
+                      <span className="font-semibold text-sm">{formatCurrency(Number(p.amount))}</span>
                     </div>
                   );
                 })}
@@ -84,15 +84,15 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {burialCases.filter(c => c.status === 'pending').map(c => {
-                  const member = members.find(m => m.id === c.memberId);
+                  const member = members.find(m => m.id === c.member_id);
                   return (
                     <div key={c.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
                       <div>
-                        <p className="font-medium text-sm">{member?.fullName || c.memberId}</p>
-                        <p className="text-xs text-muted-foreground">Reported: {c.dateReported}</p>
+                        <p className="font-medium text-sm">{member?.full_name || c.member_id}</p>
+                        <p className="text-xs text-muted-foreground">Reported: {c.date_reported}</p>
                       </div>
-                      <Badge variant={c.eligibilityStatus === 'eligible' ? 'default' : 'destructive'}>
-                        {c.eligibilityStatus === 'eligible' ? 'Eligible' : 'Not Eligible'}
+                      <Badge variant={c.eligibility_status === 'eligible' ? 'default' : 'destructive'}>
+                        {c.eligibility_status === 'eligible' ? 'Eligible' : 'Not Eligible'}
                       </Badge>
                     </div>
                   );

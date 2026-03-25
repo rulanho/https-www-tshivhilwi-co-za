@@ -1,9 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import {
-  Household, Member, Payment, BurialCase, Payout, RulesConfig,
-  mockHouseholds, mockMembers, mockPayments, mockBurialCases, mockPayouts, defaultRules,
-  getAge, getMonthsSinceJoin, generateId
-} from '@/lib/data';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
+
+type Household = Tables<'households'>;
+type Member = Tables<'members'>;
+type Payment = Tables<'payments'>;
+type BurialCase = Tables<'burial_cases'>;
+type Payout = Tables<'payouts'>;
+type RulesConfig = Tables<'rules_config'>;
 
 interface DataContextType {
   households: Household[];
@@ -11,37 +16,70 @@ interface DataContextType {
   payments: Payment[];
   burialCases: BurialCase[];
   payouts: Payout[];
-  rules: RulesConfig;
-  addHousehold: (h: Omit<Household, 'id'>) => void;
-  addMember: (m: Omit<Member, 'id'>) => void;
-  addPayment: (p: Omit<Payment, 'id'>) => void;
-  addBurialCase: (c: Omit<BurialCase, 'id' | 'eligibilityStatus' | 'eligibilityReason'>) => void;
-  addPayout: (p: Omit<Payout, 'id'>) => void;
-  updateCaseStatus: (id: string, status: BurialCase['status']) => void;
-  updateRules: (r: RulesConfig) => void;
+  rules: RulesConfig | null;
+  loading: boolean;
+  addHousehold: (h: TablesInsert<'households'>) => Promise<void>;
+  addMember: (m: TablesInsert<'members'>) => Promise<void>;
+  addPayment: (p: TablesInsert<'payments'>) => Promise<void>;
+  addBurialCase: (c: TablesInsert<'burial_cases'>) => Promise<void>;
+  addPayout: (p: TablesInsert<'payouts'>) => Promise<void>;
+  updateCaseStatus: (id: string, status: string) => Promise<void>;
+  updateRules: (r: Partial<RulesConfig>) => Promise<void>;
   checkEligibility: (memberId: string, householdId: string) => { eligible: boolean; reason: string };
+  refresh: () => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [households, setHouseholds] = useState<Household[]>(mockHouseholds);
-  const [members, setMembers] = useState<Member[]>(mockMembers);
-  const [payments, setPayments] = useState<Payment[]>(mockPayments);
-  const [burialCases, setBurialCases] = useState<BurialCase[]>(mockBurialCases);
-  const [payouts, setPayouts] = useState<Payout[]>(mockPayouts);
-  const [rules, setRules] = useState<RulesConfig>(defaultRules);
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [burialCases, setBurialCases] = useState<BurialCase[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [rules, setRules] = useState<RulesConfig | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const addHousehold = (h: Omit<Household, 'id'>) => {
-    setHouseholds(prev => [...prev, { ...h, id: generateId('H') }]);
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const [hRes, mRes, pRes, bcRes, poRes, rRes] = await Promise.all([
+      supabase.from('households').select('*').order('created_at', { ascending: false }),
+      supabase.from('members').select('*').order('created_at', { ascending: false }),
+      supabase.from('payments').select('*').order('created_at', { ascending: false }),
+      supabase.from('burial_cases').select('*').order('created_at', { ascending: false }),
+      supabase.from('payouts').select('*').order('created_at', { ascending: false }),
+      supabase.from('rules_config').select('*').limit(1).single(),
+    ]);
+    if (hRes.data) setHouseholds(hRes.data);
+    if (mRes.data) setMembers(mRes.data);
+    if (pRes.data) setPayments(pRes.data);
+    if (bcRes.data) setBurialCases(bcRes.data);
+    if (poRes.data) setPayouts(poRes.data);
+    if (rRes.data) setRules(rRes.data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const addHousehold = async (h: TablesInsert<'households'>) => {
+    const { error } = await supabase.from('households').insert(h);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Household added');
+    fetchAll();
   };
 
-  const addMember = (m: Omit<Member, 'id'>) => {
-    setMembers(prev => [...prev, { ...m, id: generateId('M') }]);
+  const addMember = async (m: TablesInsert<'members'>) => {
+    const { error } = await supabase.from('members').insert(m);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Member added');
+    fetchAll();
   };
 
-  const addPayment = (p: Omit<Payment, 'id'>) => {
-    setPayments(prev => [...prev, { ...p, id: generateId('P') }]);
+  const addPayment = async (p: TablesInsert<'payments'>) => {
+    const { error } = await supabase.from('payments').insert(p);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Payment recorded');
+    fetchAll();
   };
 
   const checkEligibility = (memberId: string, householdId: string) => {
@@ -51,44 +89,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!household) return { eligible: false, reason: 'Household not found' };
     if (household.status !== 'active') return { eligible: false, reason: 'Household is inactive' };
 
-    const age = getAge(member.dateOfBirth);
-    if (age < rules.minimumAge) return { eligible: false, reason: `Member age (${age}) is below minimum (${rules.minimumAge})` };
+    if (member.date_of_birth && rules) {
+      const age = getAge(member.date_of_birth);
+      if (age < rules.minimum_age) return { eligible: false, reason: `Member age (${age}) is below minimum (${rules.minimum_age})` };
+    }
 
-    const months = getMonthsSinceJoin(household.joinDate);
-    if (months < rules.minimumMembershipMonths) return { eligible: false, reason: `Membership duration (${months} months) is below minimum (${rules.minimumMembershipMonths} months)` };
+    if (rules) {
+      const months = getMonthsSinceJoin(household.join_date);
+      if (months < rules.minimum_membership_months) return { eligible: false, reason: `Membership duration (${months} months) is below minimum (${rules.minimum_membership_months} months)` };
+    }
 
-    const householdPayments = payments.filter(p => p.householdId === householdId);
-    const missed = householdPayments.filter(p => p.status === 'missed');
+    const missed = payments.filter(p => p.household_id === householdId && p.status === 'missed');
     if (missed.length > 0) return { eligible: false, reason: 'Household has missed contributions' };
 
     return { eligible: true, reason: 'All eligibility criteria met' };
   };
 
-  const addBurialCase = (c: Omit<BurialCase, 'id' | 'eligibilityStatus' | 'eligibilityReason'>) => {
-    const { eligible, reason } = checkEligibility(c.memberId, c.householdId);
-    setBurialCases(prev => [...prev, {
+  const addBurialCase = async (c: TablesInsert<'burial_cases'>) => {
+    const { eligible, reason } = checkEligibility(c.member_id, c.household_id);
+    const caseData = {
       ...c,
-      id: generateId('BC'),
-      eligibilityStatus: eligible ? 'eligible' : 'not_eligible',
-      eligibilityReason: reason,
-    }]);
+      eligibility_status: eligible ? 'eligible' : 'not_eligible',
+      eligibility_reason: reason,
+    };
+    const { error } = await supabase.from('burial_cases').insert(caseData);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Burial case registered');
+    fetchAll();
   };
 
-  const addPayout = (p: Omit<Payout, 'id'>) => {
-    setPayouts(prev => [...prev, { ...p, id: generateId('PO') }]);
+  const addPayout = async (p: TablesInsert<'payouts'>) => {
+    const { error } = await supabase.from('payouts').insert(p);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Payout recorded');
+    fetchAll();
   };
 
-  const updateCaseStatus = (id: string, status: BurialCase['status']) => {
-    setBurialCases(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+  const updateCaseStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from('burial_cases').update({ status }).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    fetchAll();
   };
 
-  const updateRules = (r: RulesConfig) => setRules(r);
+  const updateRules = async (r: Partial<RulesConfig>) => {
+    if (!rules) return;
+    const { error } = await supabase.from('rules_config').update(r).eq('id', rules.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Settings saved');
+    fetchAll();
+  };
 
   return (
     <DataContext.Provider value={{
-      households, members, payments, burialCases, payouts, rules,
+      households, members, payments, burialCases, payouts, rules, loading,
       addHousehold, addMember, addPayment, addBurialCase, addPayout,
-      updateCaseStatus, updateRules, checkEligibility
+      updateCaseStatus, updateRules, checkEligibility, refresh: fetchAll,
     }}>
       {children}
     </DataContext.Provider>
@@ -99,4 +154,19 @@ export function useData() {
   const ctx = useContext(DataContext);
   if (!ctx) throw new Error('useData must be used within DataProvider');
   return ctx;
+}
+
+function getAge(dateOfBirth: string): number {
+  const today = new Date();
+  const birth = new Date(dateOfBirth);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function getMonthsSinceJoin(joinDate: string): number {
+  const now = new Date();
+  const join = new Date(joinDate);
+  return (now.getFullYear() - join.getFullYear()) * 12 + (now.getMonth() - join.getMonth());
 }

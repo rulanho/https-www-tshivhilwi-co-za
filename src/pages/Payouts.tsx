@@ -3,7 +3,6 @@ import { useData } from '@/contexts/DataContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,22 +13,22 @@ import { formatCurrency } from '@/lib/data';
 export default function Payouts() {
   const { payouts, burialCases, members, households, addPayout, updateCaseStatus, rules } = useData();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ caseId: '', paymentMethod: 'eft', notes: '' });
+  const [form, setForm] = useState({ case_id: '', payment_method: 'eft', notes: '' });
 
-  const eligibleCases = burialCases.filter(c => c.eligibilityStatus === 'eligible' && c.status === 'pending');
+  const eligibleCases = burialCases.filter(c => c.eligibility_status === 'eligible' && c.status === 'pending');
 
   const handleApprove = () => {
-    if (!form.caseId) return;
+    if (!form.case_id) return;
     addPayout({
-      caseId: form.caseId,
-      approvedAmount: rules.payoutAmount,
-      paymentDate: new Date().toISOString().split('T')[0],
-      paymentMethod: form.paymentMethod,
-      approvedBy: 'Admin',
+      case_id: form.case_id,
+      approved_amount: rules?.payout_amount || 15000,
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_method: form.payment_method,
+      approved_by: 'Admin',
       notes: form.notes,
     });
-    updateCaseStatus(form.caseId, 'approved');
-    setForm({ caseId: '', paymentMethod: 'eft', notes: '' });
+    updateCaseStatus(form.case_id, 'approved');
+    setForm({ case_id: '', payment_method: 'eft', notes: '' });
     setOpen(false);
   };
 
@@ -49,22 +48,22 @@ export default function Payouts() {
             <div className="space-y-3">
               <div>
                 <Label>Eligible Case</Label>
-                <Select onValueChange={v => setForm(f => ({ ...f, caseId: v }))}>
+                <Select onValueChange={v => setForm(f => ({ ...f, case_id: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select case" /></SelectTrigger>
                   <SelectContent>
                     {eligibleCases.map(c => {
-                      const member = members.find(m => m.id === c.memberId);
-                      return <SelectItem key={c.id} value={c.id}>{member?.fullName} ({c.id})</SelectItem>;
+                      const member = members.find(m => m.id === c.member_id);
+                      return <SelectItem key={c.id} value={c.id}>{member?.full_name} ({c.id.slice(0, 8)})</SelectItem>;
                     })}
                   </SelectContent>
                 </Select>
               </div>
               <div className="bg-muted rounded-lg p-3 text-sm">
-                Payout Amount: <span className="font-semibold">{formatCurrency(rules.payoutAmount)}</span>
+                Payout Amount: <span className="font-semibold">{formatCurrency(rules?.payout_amount || 15000)}</span>
               </div>
               <div>
                 <Label>Payment Method</Label>
-                <Select value={form.paymentMethod} onValueChange={v => setForm(f => ({ ...f, paymentMethod: v }))}>
+                <Select value={form.payment_method} onValueChange={v => setForm(f => ({ ...f, payment_method: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="eft">EFT</SelectItem>
@@ -89,14 +88,14 @@ export default function Payouts() {
           <h3 className="text-lg font-semibold mb-3 font-display">Pending Approval ({eligibleCases.length})</h3>
           <div className="grid gap-3">
             {eligibleCases.map(c => {
-              const member = members.find(m => m.id === c.memberId);
-              const hh = households.find(h => h.id === c.householdId);
+              const member = members.find(m => m.id === c.member_id);
+              const hh = households.find(h => h.id === c.household_id);
               return (
                 <Card key={c.id} className="border-warning/30 bg-warning/5">
                   <CardContent className="py-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{member?.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{hh?.name} · Died: {c.dateOfDeath}</p>
+                      <p className="font-medium">{member?.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{hh?.name} · Died: {c.date_of_death}</p>
                     </div>
                     <Badge className="bg-warning text-warning-foreground">Awaiting Approval</Badge>
                   </CardContent>
@@ -126,11 +125,11 @@ export default function Payouts() {
                   <tbody>
                     {payouts.map(p => (
                       <tr key={p.id} className="border-b border-border last:border-0">
-                        <td className="p-4 font-medium">{p.caseId}</td>
-                        <td className="p-4">{formatCurrency(p.approvedAmount)}</td>
-                        <td className="p-4">{p.paymentDate}</td>
-                        <td className="p-4 uppercase">{p.paymentMethod}</td>
-                        <td className="p-4">{p.approvedBy}</td>
+                        <td className="p-4 font-medium">{p.case_id.slice(0, 8)}...</td>
+                        <td className="p-4">{formatCurrency(Number(p.approved_amount))}</td>
+                        <td className="p-4">{p.payment_date}</td>
+                        <td className="p-4 uppercase">{p.payment_method}</td>
+                        <td className="p-4">{p.approved_by}</td>
                       </tr>
                     ))}
                   </tbody>

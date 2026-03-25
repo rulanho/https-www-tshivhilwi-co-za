@@ -15,31 +15,31 @@ export default function Payments() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [form, setForm] = useState({
-    householdId: '', paymentMonth: '', paymentMethod: 'cash' as 'cash' | 'eft',
+    household_id: '', payment_month: '', payment_method: 'cash' as 'cash' | 'eft',
   });
 
   const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
-  const sorted = [...filtered].sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
+  const sorted = [...filtered].sort((a, b) => (b.payment_date || '').localeCompare(a.payment_date || ''));
 
   const handleAdd = () => {
-    if (!form.householdId || !form.paymentMonth) return;
+    if (!form.household_id || !form.payment_month) return;
     addPayment({
-      householdId: form.householdId,
-      amount: rules.monthlyContribution,
-      paymentDate: new Date().toISOString().split('T')[0],
-      paymentMonth: form.paymentMonth,
-      paymentMethod: form.paymentMethod,
-      recordedBy: 'Treasurer',
+      household_id: form.household_id,
+      amount: rules?.monthly_contribution || 200,
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_month: form.payment_month,
+      payment_method: form.payment_method,
+      recorded_by: 'Treasurer',
       status: 'paid',
     });
-    setForm({ householdId: '', paymentMonth: '', paymentMethod: 'cash' });
+    setForm({ household_id: '', payment_month: '', payment_method: 'cash' });
     setOpen(false);
   };
 
   const statusColor = (s: string) => {
-    if (s === 'paid') return 'default';
-    if (s === 'missed') return 'destructive';
-    return 'secondary';
+    if (s === 'paid') return 'default' as const;
+    if (s === 'missed') return 'destructive' as const;
+    return 'secondary' as const;
   };
 
   return (
@@ -58,7 +58,7 @@ export default function Payments() {
             <div className="space-y-3">
               <div>
                 <Label>Household</Label>
-                <Select onValueChange={v => setForm(f => ({ ...f, householdId: v }))}>
+                <Select onValueChange={v => setForm(f => ({ ...f, household_id: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select household" /></SelectTrigger>
                   <SelectContent>
                     {households.filter(h => h.status === 'active').map(h => (
@@ -69,11 +69,11 @@ export default function Payments() {
               </div>
               <div>
                 <Label>Payment Month</Label>
-                <Input placeholder="e.g. Mar 2026" value={form.paymentMonth} onChange={e => setForm(f => ({ ...f, paymentMonth: e.target.value }))} />
+                <Input placeholder="e.g. Mar 2026" value={form.payment_month} onChange={e => setForm(f => ({ ...f, payment_month: e.target.value }))} />
               </div>
               <div>
                 <Label>Method</Label>
-                <Select value={form.paymentMethod} onValueChange={v => setForm(f => ({ ...f, paymentMethod: v as 'cash' | 'eft' }))}>
+                <Select value={form.payment_method} onValueChange={v => setForm(f => ({ ...f, payment_method: v as 'cash' | 'eft' }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash</SelectItem>
@@ -82,7 +82,7 @@ export default function Payments() {
                 </Select>
               </div>
               <div className="bg-muted rounded-lg p-3 text-sm">
-                Amount: <span className="font-semibold">{formatCurrency(rules.monthlyContribution)}</span>
+                Amount: <span className="font-semibold">{formatCurrency(rules?.monthly_contribution || 200)}</span>
               </div>
               <Button onClick={handleAdd} className="w-full">Record Payment</Button>
             </div>
@@ -114,14 +114,14 @@ export default function Payments() {
               </thead>
               <tbody>
                 {sorted.map(p => {
-                  const hh = households.find(h => h.id === p.householdId);
+                  const hh = households.find(h => h.id === p.household_id);
                   return (
                     <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/50">
-                      <td className="p-4 font-medium">{hh?.name || p.householdId}</td>
-                      <td className="p-4">{p.paymentMonth}</td>
-                      <td className="p-4">{p.status === 'missed' ? '—' : formatCurrency(p.amount)}</td>
-                      <td className="p-4 uppercase">{p.paymentMethod}</td>
-                      <td className="p-4">{p.paymentDate || '—'}</td>
+                      <td className="p-4 font-medium">{hh?.name || p.household_id}</td>
+                      <td className="p-4">{p.payment_month}</td>
+                      <td className="p-4">{p.status === 'missed' ? '—' : formatCurrency(Number(p.amount))}</td>
+                      <td className="p-4 uppercase">{p.payment_method}</td>
+                      <td className="p-4">{p.payment_date || '—'}</td>
                       <td className="p-4"><Badge variant={statusColor(p.status)}>{p.status}</Badge></td>
                     </tr>
                   );

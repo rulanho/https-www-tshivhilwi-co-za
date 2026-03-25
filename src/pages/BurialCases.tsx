@@ -12,22 +12,22 @@ import { Plus } from 'lucide-react';
 export default function BurialCases() {
   const { burialCases, members, households, addBurialCase } = useData();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ memberId: '', householdId: '', dateOfDeath: '', dateReported: '' });
+  const [form, setForm] = useState({ member_id: '', household_id: '', date_of_death: '', date_reported: '' });
 
   const handleAdd = () => {
-    if (!form.memberId || !form.householdId || !form.dateOfDeath) return;
+    if (!form.member_id || !form.household_id || !form.date_of_death) return;
     addBurialCase({
-      memberId: form.memberId,
-      householdId: form.householdId,
-      dateOfDeath: form.dateOfDeath,
-      dateReported: form.dateReported || new Date().toISOString().split('T')[0],
+      member_id: form.member_id,
+      household_id: form.household_id,
+      date_of_death: form.date_of_death,
+      date_reported: form.date_reported || new Date().toISOString().split('T')[0],
       status: 'pending',
     });
-    setForm({ memberId: '', householdId: '', dateOfDeath: '', dateReported: '' });
+    setForm({ member_id: '', household_id: '', date_of_death: '', date_reported: '' });
     setOpen(false);
   };
 
-  const selectedHhMembers = form.householdId ? members.filter(m => m.householdId === form.householdId) : [];
+  const selectedHhMembers = form.household_id ? members.filter(m => m.household_id === form.household_id) : [];
 
   return (
     <div>
@@ -45,7 +45,7 @@ export default function BurialCases() {
             <div className="space-y-3">
               <div>
                 <Label>Household</Label>
-                <Select onValueChange={v => setForm(f => ({ ...f, householdId: v, memberId: '' }))}>
+                <Select onValueChange={v => setForm(f => ({ ...f, household_id: v, member_id: '' }))}>
                   <SelectTrigger><SelectValue placeholder="Select household" /></SelectTrigger>
                   <SelectContent>
                     {households.map(h => (
@@ -56,17 +56,17 @@ export default function BurialCases() {
               </div>
               <div>
                 <Label>Deceased Member</Label>
-                <Select onValueChange={v => setForm(f => ({ ...f, memberId: v }))} disabled={!form.householdId}>
+                <Select onValueChange={v => setForm(f => ({ ...f, member_id: v }))} disabled={!form.household_id}>
                   <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
                   <SelectContent>
                     {selectedHhMembers.map(m => (
-                      <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
+                      <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Date of Death</Label><Input type="date" value={form.dateOfDeath} onChange={e => setForm(f => ({ ...f, dateOfDeath: e.target.value }))} /></div>
-              <div><Label>Date Reported</Label><Input type="date" value={form.dateReported} onChange={e => setForm(f => ({ ...f, dateReported: e.target.value }))} /></div>
+              <div><Label>Date of Death</Label><Input type="date" value={form.date_of_death} onChange={e => setForm(f => ({ ...f, date_of_death: e.target.value }))} /></div>
+              <div><Label>Date Reported</Label><Input type="date" value={form.date_reported} onChange={e => setForm(f => ({ ...f, date_reported: e.target.value }))} /></div>
               <p className="text-xs text-muted-foreground">Eligibility will be automatically checked upon submission.</p>
               <Button onClick={handleAdd} className="w-full">Submit Case</Button>
             </div>
@@ -77,27 +77,27 @@ export default function BurialCases() {
       <div className="grid gap-4">
         {burialCases.length === 0 && <p className="text-muted-foreground">No burial cases registered.</p>}
         {burialCases.map(c => {
-          const member = members.find(m => m.id === c.memberId);
-          const hh = households.find(h => h.id === c.householdId);
+          const member = members.find(m => m.id === c.member_id);
+          const hh = households.find(h => h.id === c.household_id);
           return (
             <Card key={c.id}>
               <CardContent className="py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{member?.fullName || c.memberId}</p>
-                    <p className="text-xs text-muted-foreground">{hh?.name} · Died: {c.dateOfDeath} · Reported: {c.dateReported}</p>
+                    <p className="font-semibold">{member?.full_name || c.member_id}</p>
+                    <p className="text-xs text-muted-foreground">{hh?.name} · Died: {c.date_of_death} · Reported: {c.date_reported}</p>
                   </div>
                   <div className="flex gap-2">
                     <Badge variant={c.status === 'approved' ? 'default' : c.status === 'rejected' ? 'destructive' : 'secondary'}>
                       {c.status}
                     </Badge>
-                    <Badge variant={c.eligibilityStatus === 'eligible' ? 'default' : 'destructive'}>
-                      {c.eligibilityStatus === 'eligible' ? '✅ Eligible' : '❌ Not Eligible'}
+                    <Badge variant={c.eligibility_status === 'eligible' ? 'default' : 'destructive'}>
+                      {c.eligibility_status === 'eligible' ? '✅ Eligible' : '❌ Not Eligible'}
                     </Badge>
                   </div>
                 </div>
-                {c.eligibilityReason && (
-                  <p className="text-xs mt-2 text-muted-foreground italic">Reason: {c.eligibilityReason}</p>
+                {c.eligibility_reason && (
+                  <p className="text-xs mt-2 text-muted-foreground italic">Reason: {c.eligibility_reason}</p>
                 )}
               </CardContent>
             </Card>

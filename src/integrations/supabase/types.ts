@@ -14,16 +14,312 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      burial_cases: {
+        Row: {
+          created_at: string
+          date_of_death: string
+          date_reported: string
+          eligibility_reason: string | null
+          eligibility_status: string
+          household_id: string
+          id: string
+          member_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_death: string
+          date_reported?: string
+          eligibility_reason?: string | null
+          eligibility_status?: string
+          household_id: string
+          id?: string
+          member_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_death?: string
+          date_reported?: string
+          eligibility_reason?: string | null
+          eligibility_status?: string
+          household_id?: string
+          id?: string
+          member_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burial_cases_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "burial_cases_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          address: string | null
+          contact_person: string
+          created_at: string
+          id: string
+          join_date: string
+          name: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person: string
+          created_at?: string
+          id?: string
+          join_date?: string
+          name: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string
+          created_at?: string
+          id?: string
+          join_date?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          full_name: string
+          household_id: string
+          id: string
+          id_number: string | null
+          relationship: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name: string
+          household_id: string
+          id?: string
+          id_number?: string | null
+          relationship?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string
+          household_id?: string
+          id?: string
+          id_number?: string | null
+          relationship?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          household_id: string
+          id: string
+          payment_date: string | null
+          payment_method: string
+          payment_month: string
+          recorded_by: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          household_id: string
+          id?: string
+          payment_date?: string | null
+          payment_method?: string
+          payment_month: string
+          recorded_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          household_id?: string
+          id?: string
+          payment_date?: string | null
+          payment_method?: string
+          payment_month?: string
+          recorded_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          approved_amount: number
+          approved_by: string | null
+          case_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+        }
+        Insert: {
+          approved_amount: number
+          approved_by?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method: string
+        }
+        Update: {
+          approved_amount?: number
+          approved_by?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "burial_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rules_config: {
+        Row: {
+          id: string
+          minimum_age: number
+          minimum_membership_months: number
+          monthly_contribution: number
+          payout_amount: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          minimum_age?: number
+          minimum_membership_months?: number
+          monthly_contribution?: number
+          payout_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          minimum_age?: number
+          minimum_membership_months?: number
+          monthly_contribution?: number
+          payout_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "treasurer" | "secretary"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +446,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "treasurer", "secretary"],
+    },
   },
 } as const

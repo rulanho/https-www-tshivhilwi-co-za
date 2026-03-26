@@ -90,20 +90,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addPayment = async (p: TablesInsert<'payments'>) => {
-    const { error } = await supabase.from('payments').insert(p as any);
+    const { data, error } = await supabase.from('payments').insert(p as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Payment recorded');
+    logActivity('record_payment', 'payment', data?.id, { household_id: p.household_id, amount: p.amount, month: p.payment_month });
     // Send SMS notification (fire and forget)
     supabase.functions.invoke('send-payment-notification', {
-      body: {
-        household_id: p.household_id,
-        amount: p.amount,
-        payment_month: p.payment_month,
-        type: 'payment',
-      },
+      body: { household_id: p.household_id, amount: p.amount, payment_month: p.payment_month, type: 'payment' },
     }).then(({ data }) => {
       if (data?.success) toast.info('SMS notification sent to household');
-    }).catch(() => { /* SMS is optional */ });
+    }).catch(() => {});
     fetchAll();
   };
 

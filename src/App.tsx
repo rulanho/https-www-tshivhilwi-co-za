@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +14,8 @@ import Payouts from "@/pages/Payouts";
 import SettingsPage from "@/pages/Settings";
 import Reports from "@/pages/Reports";
 import Profile from "@/pages/Profile";
+import Requests from "@/pages/Requests";
+import SpecialContributions from "@/pages/SpecialContributions";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -44,6 +46,8 @@ function ProtectedRoutes() {
           <Route path="/payments" element={<Payments />} />
           <Route path="/burial-cases" element={<BurialCases />} />
           <Route path="/payouts" element={<Payouts />} />
+          <Route path="/requests" element={<Requests />} />
+          <Route path="/special-contributions" element={<SpecialContributions />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage />} />

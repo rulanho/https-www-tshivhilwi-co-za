@@ -73,10 +73,14 @@ export type Database = {
           address: string | null
           contact_person: string
           created_at: string
+          gps_lat: number | null
+          gps_lng: number | null
           id: string
           join_date: string
           name: string
           phone: string | null
+          section: string | null
+          stand_number: string | null
           status: string
           updated_at: string
         }
@@ -84,10 +88,14 @@ export type Database = {
           address?: string | null
           contact_person: string
           created_at?: string
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: string
           join_date?: string
           name: string
           phone?: string | null
+          section?: string | null
+          stand_number?: string | null
           status?: string
           updated_at?: string
         }
@@ -95,10 +103,14 @@ export type Database = {
           address?: string | null
           contact_person?: string
           created_at?: string
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: string
           join_date?: string
           name?: string
           phone?: string | null
+          section?: string | null
+          stand_number?: string | null
           status?: string
           updated_at?: string
         }
@@ -108,10 +120,14 @@ export type Database = {
         Row: {
           created_at: string
           date_of_birth: string | null
+          email: string | null
           full_name: string
           household_id: string
           id: string
           id_number: string | null
+          phone_1: string | null
+          phone_2: string | null
+          profile_picture_url: string | null
           relationship: string | null
           status: string
           updated_at: string
@@ -119,10 +135,14 @@ export type Database = {
         Insert: {
           created_at?: string
           date_of_birth?: string | null
+          email?: string | null
           full_name: string
           household_id: string
           id?: string
           id_number?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
+          profile_picture_url?: string | null
           relationship?: string | null
           status?: string
           updated_at?: string
@@ -130,10 +150,14 @@ export type Database = {
         Update: {
           created_at?: string
           date_of_birth?: string | null
+          email?: string | null
           full_name?: string
           household_id?: string
           id?: string
           id_number?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
+          profile_picture_url?: string | null
           relationship?: string | null
           status?: string
           updated_at?: string
@@ -154,9 +178,11 @@ export type Database = {
           created_at: string
           household_id: string
           id: string
+          notes: string | null
           payment_date: string | null
           payment_method: string
           payment_month: string
+          receipt_image_url: string | null
           recorded_by: string | null
           status: string
         }
@@ -165,9 +191,11 @@ export type Database = {
           created_at?: string
           household_id: string
           id?: string
+          notes?: string | null
           payment_date?: string | null
           payment_method?: string
           payment_month: string
+          receipt_image_url?: string | null
           recorded_by?: string | null
           status?: string
         }
@@ -176,9 +204,11 @@ export type Database = {
           created_at?: string
           household_id?: string
           id?: string
+          notes?: string | null
           payment_date?: string | null
           payment_method?: string
           payment_month?: string
+          receipt_image_url?: string | null
           recorded_by?: string | null
           status?: string
         }
@@ -260,6 +290,66 @@ export type Database = {
         }
         Relationships: []
       }
+      requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          household_id: string
+          id: string
+          member_id: string | null
+          request_type: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          household_id: string
+          id?: string
+          member_id?: string | null
+          request_type?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          household_id?: string
+          id?: string
+          member_id?: string | null
+          request_type?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rules_config: {
         Row: {
           id: string
@@ -283,6 +373,84 @@ export type Database = {
           minimum_membership_months?: number
           monthly_contribution?: number
           payout_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      special_contribution_payments: {
+        Row: {
+          amount: number
+          contribution_id: string
+          created_at: string
+          household_id: string
+          id: string
+          payment_date: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number
+          contribution_id: string
+          created_at?: string
+          household_id: string
+          id?: string
+          payment_date?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          contribution_id?: string
+          created_at?: string
+          household_id?: string
+          id?: string
+          payment_date?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_contribution_payments_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "special_contributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_contribution_payments_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_contributions: {
+        Row: {
+          amount_per_household: number
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount_per_household?: number
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount_per_household?: number
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []

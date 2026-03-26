@@ -90,6 +90,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from('payments').insert(p as any);
     if (error) { toast.error(error.message); return; }
     toast.success('Payment recorded');
+    // Send SMS notification (fire and forget)
+    supabase.functions.invoke('send-payment-notification', {
+      body: {
+        household_id: p.household_id,
+        amount: p.amount,
+        payment_month: p.payment_month,
+        type: 'payment',
+      },
+    }).then(({ data }) => {
+      if (data?.success) toast.info('SMS notification sent to household');
+    }).catch(() => { /* SMS is optional */ });
     fetchAll();
   };
 

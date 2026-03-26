@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Plus, MessageSquare, FileText, CheckCircle, Clock, XCircle, Download, A
 import { REQUEST_TYPES } from '@/lib/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Requests() {
   const { households, members, requests, addRequest, updateRequestStatus } = useData();

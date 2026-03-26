@@ -19,17 +19,14 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
   const expiryDate = new Date(data.expiresAt).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
   const expiryShort = new Date(data.expiresAt).toLocaleDateString('en-ZA');
 
-  const signatureBlock = data.leaderSignature
-    ? `<div style="margin-top:10px;">
-         <img src="${data.leaderSignature}" style="max-height:60px; max-width:200px;" alt="Digital Signature" />
-       </div>`
-    : data.leaderName
-      ? `<div style="margin-top:10px; font-family: 'Brush Script MT', cursive; font-size: 24px; color: #1a3a5c;">${data.leaderName}</div>`
-      : '';
+  const chiefName = 'Rulani Nevhufumba';
+  const chiefPhone = '071 890 0425';
+
+  const signatureBlock = `<div style="margin-top:10px; font-family: 'Brush Script MT', cursive; font-size: 28px; color: #1a3a5c;">${chiefName}</div>`;
 
   const leaderContactBlock = data.leaderName
     ? `<div style="margin-top: 8px; font-size: 12px; color: #555;">
-         <strong>Community Leader:</strong> ${data.leaderName}<br/>
+         <strong>Section Leader:</strong> ${data.leaderName}<br/>
          ${data.leaderPhone ? `<strong>Contact:</strong> ${data.leaderPhone}` : ''}
        </div>`
     : '';
@@ -94,16 +91,19 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
         <p class="expiry">⚠ This document expires on ${expiryShort} and must be renewed thereafter.</p>
 
         <div class="footer">
-          <div class="sig-container">
+            <div class="sig-container">
             <div class="sig-block">
               ${signatureBlock}
               <div class="signature-line">
-                Community Leader / Chief
-                ${leaderContactBlock}
+                Chief: ${chiefName}<br/>
+                Contact: ${chiefPhone}
               </div>
+              ${leaderContactBlock}
             </div>
             <div class="sig-block">
-              <div class="signature-line">Date</div>
+              <div class="signature-line">
+                Date of Approval: ${issueDate}
+              </div>
             </div>
           </div>
 

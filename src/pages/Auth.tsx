@@ -28,11 +28,36 @@ export default function Auth() {
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
-        if (error) toast.error(error.message);
+        if (error) {
+          if (error.message?.includes('Invalid login credentials')) {
+            toast.error('Invalid email or password. If you are not yet registered as staff, please contact your Admin.');
+          } else if (error.message?.includes('Email not confirmed')) {
+            toast.error('Your email has not been verified yet. Please check your inbox.');
+          } else {
+            toast.error(error.message);
+          }
+        }
       } else {
+        if (!fullName.trim()) {
+          toast.error('Please enter your full name');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          toast.error('Password must be at least 6 characters');
+          setLoading(false);
+          return;
+        }
         const { error } = await signUp(email, password, fullName);
-        if (error) toast.error(error.message);
-        else toast.success('Account created! Please check your email to verify your account.');
+        if (error) {
+          if (error.message?.includes('already registered')) {
+            toast.error('This email is already registered. Please sign in instead.');
+          } else {
+            toast.error(error.message);
+          }
+        } else {
+          toast.success('Account created! Please check your email to verify your account.');
+        }
       }
     } finally {
       setLoading(false);
@@ -41,8 +66,12 @@ export default function Auth() {
 
   const handleHouseholdLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!standNumber || !idNumber) {
-      toast.error('Please enter both stand number and ID number');
+    if (!standNumber.trim()) {
+      toast.error('Please enter your stand number');
+      return;
+    }
+    if (!idNumber.trim() || idNumber.trim().length < 6) {
+      toast.error('Please enter a valid ID number');
       return;
     }
     setLoading(true);

@@ -105,6 +105,40 @@ export default function Households() {
     refresh();
   };
 
+  const [editForm, setEditForm] = useState({
+    name: '', contact_person: '', phone: '', address: '',
+    section: '', stand_number: '',
+  });
+
+  const openEditDialog = () => {
+    if (!viewHousehold) return;
+    setEditForm({
+      name: viewHousehold.name,
+      contact_person: viewHousehold.contact_person,
+      phone: viewHousehold.phone || '',
+      address: viewHousehold.address || '',
+      section: viewHousehold.section || '',
+      stand_number: viewHousehold.stand_number || '',
+    });
+    setEditOpen(true);
+  };
+
+  const handleEditHousehold = async () => {
+    if (!selectedHh) return;
+    const { error } = await supabase.from('households').update({
+      name: editForm.name,
+      contact_person: editForm.contact_person,
+      phone: editForm.phone || null,
+      address: editForm.address || null,
+      section: editForm.section || null,
+      stand_number: editForm.stand_number || null,
+    }).eq('id', selectedHh);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Household updated');
+    setEditOpen(false);
+    refresh();
+  };
+
   const viewHousehold = selectedHh ? households.find(h => h.id === selectedHh) : null;
   const viewMembers = selectedHh ? members.filter(m => m.household_id === selectedHh) : [];
 

@@ -68,6 +68,7 @@ export default function Requests() {
     const hh = households.find(h => h.id === req.household_id);
     if (!hh) return;
     const approvedAt = req.approved_at || req.resolved_at;
+    const leader = sectionLeaders.find(l => l.section === hh.section);
     generateProofOfAddress({
       householdName: hh.name,
       contactPerson: hh.contact_person,
@@ -79,6 +80,8 @@ export default function Requests() {
       approvedAt,
       expiresAt: getExpiryDate(approvedAt),
       requestId: req.id,
+      leaderName: leader?.full_name,
+      leaderPhone: leader?.phone ?? undefined,
     });
   };
 

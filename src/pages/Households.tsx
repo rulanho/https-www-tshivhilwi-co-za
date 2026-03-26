@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Users, ChevronRight, MapPin, Upload, Camera } from 'lucide-react';
+import { Plus, Users, ChevronRight, MapPin, Camera, Pencil } from 'lucide-react';
 import { getAge, SECTIONS } from '@/lib/data';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,12 +16,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Households() {
   const { households, members, addHousehold, addMember, refresh } = useData();
+  const { hasRole } = useAuth();
   const [hhOpen, setHhOpen] = useState(false);
   const [memOpen, setMemOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedHh, setSelectedHh] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingMemberId, setUploadingMemberId] = useState<string | null>(null);
+  const canEdit = hasRole('admin') || hasRole('secretary');
 
   const [hhForm, setHhForm] = useState({
     name: '', contact_person: '', phone: '', address: '',
@@ -98,6 +102,40 @@ export default function Households() {
     await supabase.from('members').update({ profile_picture_url: urlData.publicUrl } as any).eq('id', memberId);
     toast.success('Profile picture updated');
     setUploadingMemberId(null);
+    refresh();
+  };
+
+  const [editForm, setEditForm] = useState({
+    name: '', contact_person: '', phone: '', address: '',
+    section: '', stand_number: '',
+  });
+
+  const openEditDialog = () => {
+    if (!viewHousehold) return;
+    setEditForm({
+      name: viewHousehold.name,
+      contact_person: viewHousehold.contact_person,
+      phone: viewHousehold.phone || '',
+      address: viewHousehold.address || '',
+      section: viewHousehold.section || '',
+      stand_number: viewHousehold.stand_number || '',
+    });
+    setEditOpen(true);
+  };
+
+  const handleEditHousehold = async () => {
+    if (!selectedHh) return;
+    const { error } = await supabase.from('households').update({
+      name: editForm.name,
+      contact_person: editForm.contact_person,
+      phone: editForm.phone || null,
+      address: editForm.address || null,
+      section: editForm.section || null,
+      stand_number: editForm.stand_number || null,
+    }).eq('id', selectedHh);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Household updated');
+    setEditOpen(false);
     refresh();
   };
 
@@ -195,9 +233,13 @@ export default function Households() {
           <Button variant="ghost" size="sm" onClick={() => setSelectedHh(null)} className="mb-4">← Back to list</Button>
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <CardTitle className="font-display">{viewHousehold.name}</CardTitle>
-                <Badge variant={viewHousehold.status === 'active' ? 'default' : 'secondary'}>{viewHousehold.status}</Badge>
+                {canEdit && (
+                  <Button variant="outline" size="sm" onClick={openEditDialog}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" />Edit
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -268,6 +310,30 @@ export default function Households() {
               e.target.value = '';
             }}
           />
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle className="font-display">Edit Household</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Household Name</Label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} /></div>
+                <div><Label>Contact Person</Label><Input value={editForm.contact_person} onChange={e => setEditForm(f => ({ ...f, contact_person: e.target.value }))} /></div>
+                <div><Label>Phone</Label><Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} /></div>
+                <div>
+                  <Label>Section</Label>
+                  <Select value={editForm.section} onValueChange={v => setEditForm(f => ({ ...f, section: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                    <SelectContent>
+                      {SECTIONS.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Stand Number</Label><Input value={editForm.stand_number} onChange={e => setEditForm(f => ({ ...f, stand_number: e.target.value }))} /></div>
+                <div><Label>Address</Label><Input value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                <Button onClick={handleEditHousehold} className="w-full">Save Changes</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="grid gap-3">

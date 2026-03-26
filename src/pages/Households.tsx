@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Users, ChevronRight, MapPin, Upload, Camera } from 'lucide-react';
+import { Plus, Users, ChevronRight, MapPin, Camera, Pencil } from 'lucide-react';
 import { getAge, SECTIONS } from '@/lib/data';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,12 +16,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Households() {
   const { households, members, addHousehold, addMember, refresh } = useData();
+  const { hasRole } = useAuth();
   const [hhOpen, setHhOpen] = useState(false);
   const [memOpen, setMemOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedHh, setSelectedHh] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingMemberId, setUploadingMemberId] = useState<string | null>(null);
+  const canEdit = hasRole('admin') || hasRole('secretary');
 
   const [hhForm, setHhForm] = useState({
     name: '', contact_person: '', phone: '', address: '',

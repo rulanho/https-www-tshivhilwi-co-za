@@ -68,6 +68,44 @@ export type Database = {
           },
         ]
       }
+      household_access_codes: {
+        Row: {
+          access_code: string
+          created_at: string
+          household_id: string
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          phone: string
+        }
+        Insert: {
+          access_code: string
+          created_at?: string
+          household_id: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          phone: string
+        }
+        Update: {
+          access_code?: string
+          created_at?: string
+          household_id?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_access_codes_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       households: {
         Row: {
           address: string | null

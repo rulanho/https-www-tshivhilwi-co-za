@@ -1,0 +1,1 @@
+CREATE POLICY "Household head can update own household" ON public.households FOR UPDATE TO authenticated USING (head_user_id = auth.uid()) WITH CHECK (head_user_id = auth.uid());

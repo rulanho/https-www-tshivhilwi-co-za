@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Home, Users, CreditCard, FileText, LogOut, MessageSquare, Download, AlertTriangle } from 'lucide-react';
+import { Home, Users, CreditCard, FileText, LogOut, MessageSquare, Download, AlertTriangle, MapPin, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,6 +21,41 @@ interface HouseholdData {
   id: string; name: string; contact_person: string; phone: string | null;
   section: string | null; stand_number: string | null; address: string | null;
   join_date: string; status: string; gps_lat: number | null; gps_lng: number | null;
+}
+
+function GPSButton({ household, onUpdate }: { household: HouseholdData; onUpdate: () => void }) {
+  const [capturing, setCapturing] = useState(false);
+
+  const captureGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    setCapturing(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { error } = await supabase.from('households').update({
+          gps_lat: pos.coords.latitude,
+          gps_lng: pos.coords.longitude,
+        }).eq('id', household.id);
+        setCapturing(false);
+        if (error) { toast.error('Failed to save location'); return; }
+        toast.success('Location updated successfully');
+        onUpdate();
+      },
+      () => {
+        setCapturing(false);
+        toast.error('Could not get your location. Please allow location access.');
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={captureGPS} disabled={capturing}>
+      {capturing ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Getting...</> : <><MapPin className="h-3.5 w-3.5 mr-1" />{household.gps_lat ? 'Update Location' : 'Pin Location'}</>}
+    </Button>
+  );
 }
 
 export default function HouseholdPortal() {
@@ -159,6 +194,39 @@ export default function HouseholdPortal() {
               <div><span className="text-muted-foreground">Address:</span> {household.address || '—'}</div>
               <div><span className="text-muted-foreground">Joined:</span> {household.join_date}</div>
               <div><span className="text-muted-foreground">Status:</span> <Badge variant={household.status === 'active' ? 'default' : 'secondary'}>{household.status}</Badge></div>
+            </div>
+
+            {/* GPS Location Section */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium flex items-center gap-1"><MapPin className="h-4 w-4 text-primary" />Home Location</span>
+                <GPSButton household={household} onUpdate={fetchData} />
+              </div>
+              {household.gps_lat && household.gps_lng ? (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Coordinates: {household.gps_lat.toFixed(6)}, {household.gps_lng.toFixed(6)}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${household.gps_lat},${household.gps_lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-lg overflow-hidden border hover:opacity-90 transition-opacity"
+                  >
+                    <img
+                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${household.gps_lat},${household.gps_lng}&zoom=16&size=600x200&markers=color:red%7C${household.gps_lat},${household.gps_lng}&key=&style=feature:all`}
+                      alt="Map location"
+                      className="w-full h-[150px] object-cover bg-muted"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    <div className="bg-muted/50 px-3 py-2 text-xs text-primary flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />View on Google Maps
+                    </div>
+                  </a>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No location pinned yet. Tap the button above to capture your home GPS coordinates.</p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Phone, Mail, Loader2 } from 'lucide-react';
 
 export default function Auth() {
   const { signIn, signUp } = useAuth();
@@ -19,6 +20,8 @@ export default function Auth() {
   // Phone login state
   const [phone, setPhone] = useState('');
   const [accessCode, setAccessCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [displayCode, setDisplayCode] = useState<string | null>(null);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,16 +40,51 @@ export default function Auth() {
     }
   };
 
+  const handleRequestCode = async () => {
+    if (!phone) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+    setLoading(true);
+    try {
+      const normalizedPhone = phone.replace(/\s+/g, '');
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: { phone: normalizedPhone },
+      });
+      if (error) {
+        toast.error('Failed to send code. Please try again.');
+        return;
+      }
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      setCodeSent(true);
+      if (data?.smsSent) {
+        toast.success('A verification code has been sent to your phone.');
+      } else if (data?.code) {
+        // SMS not configured — show code directly (for testing)
+        setDisplayCode(data.code);
+        toast.success('Code generated! SMS is not configured, showing code below.');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone || !accessCode) return;
     setLoading(true);
     try {
+      const normalizedPhone = phone.replace(/\s+/g, '');
       const { data, error } = await supabase.functions.invoke('verify-access-code', {
-        body: { phone, code: accessCode },
+        body: { phone: normalizedPhone, code: accessCode },
       });
       if (error) {
-        toast.error('Login failed. Check your phone number and code.');
+        toast.error('Login failed. Check your code and try again.');
         return;
       }
       if (data?.error) {
@@ -77,26 +115,60 @@ export default function Auth() {
         <CardContent>
           <Tabs defaultValue="phone" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="phone">Phone & Code</TabsTrigger>
-              <TabsTrigger value="email">Staff Login</TabsTrigger>
+              <TabsTrigger value="phone" className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5" />Household
+              </TabsTrigger>
+              <TabsTrigger value="email" className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />Staff
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="phone">
               <form onSubmit={handlePhoneLogin} className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Household heads — sign in with your phone number and access code provided by your community leader.
+                  Enter your registered phone number to receive a one-time login code.
                 </p>
                 <div>
                   <Label>Phone Number</Label>
-                  <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 071 234 5678" required />
+                  <Input
+                    value={phone}
+                    onChange={e => { setPhone(e.target.value); setCodeSent(false); setDisplayCode(null); setAccessCode(''); }}
+                    placeholder="e.g. 0712345678"
+                    required
+                  />
                 </div>
-                <div>
-                  <Label>Access Code</Label>
-                  <Input value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder="Enter your code" required />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </Button>
+
+                {!codeSent ? (
+                  <Button type="button" className="w-full" disabled={loading} onClick={handleRequestCode}>
+                    {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Checking...</> : 'Get Login Code'}
+                  </Button>
+                ) : (
+                  <>
+                    {displayCode && (
+                      <div className="bg-muted rounded-lg p-3 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Your code (SMS not configured):</p>
+                        <p className="text-2xl font-mono font-bold tracking-widest">{displayCode}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label>Enter Code</Label>
+                      <Input
+                        value={accessCode}
+                        onChange={e => setAccessCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
+                        className="text-center text-lg font-mono tracking-widest"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Signing in...</> : 'Sign In'}
+                    </Button>
+                    <Button type="button" variant="ghost" className="w-full text-sm" onClick={() => { setCodeSent(false); setDisplayCode(null); setAccessCode(''); }}>
+                      Request new code
+                    </Button>
+                  </>
+                )}
               </form>
             </TabsContent>
 

@@ -25,41 +25,42 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const normalizedPhone = phone.replace(/\s+/g, "");
+
     // Verify access code
     const { data: accessCode, error: codeError } = await supabase
       .from("household_access_codes")
       .select("*, households(name, section)")
-      .eq("phone", phone)
+      .eq("phone", normalizedPhone)
       .eq("access_code", code)
       .eq("is_active", true)
       .single();
 
     if (codeError || !accessCode) {
-      return new Response(JSON.stringify({ error: "Invalid phone number or access code" }), {
+      return new Response(JSON.stringify({ error: "Invalid code. Please request a new one." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Update last_used_at
+    // Deactivate the code after use (one-time use)
     await supabase
       .from("household_access_codes")
-      .update({ last_used_at: new Date().toISOString() })
+      .update({ is_active: false, last_used_at: new Date().toISOString() })
       .eq("id", accessCode.id);
 
-    // Create or get a special user for this household head
+    // Create or get user for this household head
     const email = `hh-${accessCode.household_id}@tshivhilwi.local`;
-    
-    // Try to sign in first
-    const { data: signInData, error: signInError } = await supabase.auth.admin.getUserByEmail(email);
-    
+    const password = `hh-${accessCode.household_id}-${Date.now()}`;
+
+    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+
     let userId: string;
-    
-    if (signInError || !signInData?.user) {
-      // Create user
+
+    if (!existingUser?.user) {
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email,
-        password: `hh-${accessCode.household_id}-${code}`,
+        password,
         email_confirm: true,
         user_metadata: {
           full_name: `Household: ${(accessCode as any).households?.name || 'Member'}`,
@@ -70,24 +71,15 @@ Deno.serve(async (req) => {
       if (createError) throw createError;
       userId = newUser.user.id;
     } else {
-      userId = signInData.user.id;
-      // Update password in case code changed
-      await supabase.auth.admin.updateUserById(userId, {
-        password: `hh-${accessCode.household_id}-${code}`,
-      });
+      userId = existingUser.user.id;
+      await supabase.auth.admin.updateUserById(userId, { password });
     }
 
-    // Sign in the user by generating a session
-    const { data: session, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-
-    // Use signInWithPassword instead for reliable session
+    // Sign in
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!);
     const { data: loginData, error: loginError } = await anonClient.auth.signInWithPassword({
       email,
-      password: `hh-${accessCode.household_id}-${code}`,
+      password,
     });
 
     if (loginError) throw loginError;
@@ -99,6 +91,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("verify-access-code error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

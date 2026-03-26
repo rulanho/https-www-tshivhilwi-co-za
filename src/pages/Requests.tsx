@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,13 @@ import { Plus, MessageSquare, FileText, CheckCircle, Clock, XCircle, Download, A
 import { REQUEST_TYPES } from '@/lib/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
+import { supabase } from '@/integrations/supabase/client';
+
+interface SectionLeader {
+  section: string;
+  full_name: string;
+  phone: string | null;
+}
 
 export default function Requests() {
   const { households, members, requests, addRequest, updateRequestStatus } = useData();
@@ -20,8 +27,15 @@ export default function Requests() {
   const [filter, setFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [sectionLeaders, setSectionLeaders] = useState<SectionLeader[]>([]);
 
   const isAdmin = roles.includes('admin') || roles.includes('secretary');
+
+  useEffect(() => {
+    supabase.from('section_leaders').select('section, full_name, phone').then(({ data }) => {
+      if (data) setSectionLeaders(data);
+    });
+  }, []);
 
   const [form, setForm] = useState({
     household_id: '', member_id: '', request_type: 'general', subject: '', description: '',
@@ -54,6 +68,7 @@ export default function Requests() {
     const hh = households.find(h => h.id === req.household_id);
     if (!hh) return;
     const approvedAt = req.approved_at || req.resolved_at;
+    const leader = sectionLeaders.find(l => l.section === hh.section);
     generateProofOfAddress({
       householdName: hh.name,
       contactPerson: hh.contact_person,
@@ -65,6 +80,8 @@ export default function Requests() {
       approvedAt,
       expiresAt: getExpiryDate(approvedAt),
       requestId: req.id,
+      leaderName: leader?.full_name,
+      leaderPhone: leader?.phone ?? undefined,
     });
   };
 

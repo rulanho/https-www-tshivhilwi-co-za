@@ -52,9 +52,9 @@ export default function Requests() {
   };
 
   const statusIcon = (s: string) => {
-    if (s === 'approved') return <CheckCircle className="h-4 w-4 text-green-600" />;
+    if (s === 'approved') return <CheckCircle className="h-4 w-4 text-primary" />;
     if (s === 'rejected') return <XCircle className="h-4 w-4 text-destructive" />;
-    return <Clock className="h-4 w-4 text-yellow-600" />;
+    return <Clock className="h-4 w-4 text-muted-foreground" />;
   };
 
   const statusVariant = (s: string) => {

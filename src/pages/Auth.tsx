@@ -26,37 +26,14 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          if (error.message?.includes('Invalid login credentials')) {
-            toast.error('Invalid email or password. If you are not yet registered as staff, please contact your Admin.');
-          } else if (error.message?.includes('Email not confirmed')) {
-            toast.error('Your email has not been verified yet. Please check your inbox.');
-          } else {
-            toast.error(error.message);
-          }
-        }
-      } else {
-        if (!fullName.trim()) {
-          toast.error('Please enter your full name');
-          setLoading(false);
-          return;
-        }
-        if (password.length < 6) {
-          toast.error('Password must be at least 6 characters');
-          setLoading(false);
-          return;
-        }
-        const { error } = await signUp(email, password, fullName);
-        if (error) {
-          if (error.message?.includes('already registered')) {
-            toast.error('This email is already registered. Please sign in instead.');
-          } else {
-            toast.error(error.message);
-          }
+      const { error } = await signIn(email, password);
+      if (error) {
+        if (error.message?.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password. If you are not yet registered as staff, please contact your Admin.');
+        } else if (error.message?.includes('Email not confirmed')) {
+          toast.error('Your email has not been verified yet. Please check your inbox.');
         } else {
-          toast.success('Account created! Please check your email to verify your account.');
+          toast.error(error.message);
         }
       }
     } finally {
@@ -125,12 +102,6 @@ export default function Auth() {
 
             <TabsContent value="staff">
               <form onSubmit={handleStaffSubmit} className="space-y-4">
-                {!isLogin && (
-                  <div>
-                    <Label>Full Name</Label>
-                    <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" required />
-                  </div>
-                )}
                 <div>
                   <Label>Email</Label>
                   <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
@@ -140,19 +111,13 @@ export default function Auth() {
                   <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Please wait...</> : isLogin ? 'Sign In' : 'Create Account'}
+                  {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Please wait...</> : 'Sign In'}
                 </Button>
               </form>
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-                <button onClick={() => setIsLogin(!isLogin)} className="text-primary underline">
-                  {isLogin ? 'Sign up' : 'Sign in'}
-                </button>
-              </p>
               <div className="mt-4 pt-3 border-t">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>For Admin, Treasurer, and Secretary staff accounts</span>
+                  <span>Staff accounts are created by the Admin. Contact your Admin if you need access.</span>
                 </div>
               </div>
             </TabsContent>

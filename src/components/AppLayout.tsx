@@ -1,9 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,6 +10,8 @@ const links = [
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/burial-cases', icon: Skull, label: 'Burial Cases' },
   { to: '/payouts', icon: Banknote, label: 'Payouts' },
+  { to: '/requests', icon: MessageSquare, label: 'Requests' },
+  { to: '/special-contributions', icon: HandCoins, label: 'Special Levies' },
   { to: '/reports', icon: FileText, label: 'Reports' },
   { to: '/profile', icon: User, label: 'Profile' },
   { to: '/settings', icon: Settings, label: 'Settings' },
@@ -62,22 +63,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 flex-col bg-sidebar border-r border-sidebar-border">
         <div className="px-6 py-5 border-b border-sidebar-border">
           <h1 className="text-xl font-bold text-sidebar-foreground font-display tracking-tight">
-            Burial Society
+            Tshivhilwi Village
           </h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-0.5">Management System</p>
+          <p className="text-xs text-sidebar-foreground/60 mt-0.5">Burial Society System</p>
         </div>
         <div className="flex-1 overflow-y-auto">{nav}</div>
         {userSection}
       </aside>
 
-      {/* Mobile header + overlay */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="lg:hidden flex items-center justify-between bg-sidebar px-4 py-3 border-b border-sidebar-border">
-          <h1 className="text-lg font-bold text-sidebar-foreground font-display">Burial Society</h1>
+          <h1 className="text-lg font-bold text-sidebar-foreground font-display">Tshivhilwi Village</h1>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground">
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>

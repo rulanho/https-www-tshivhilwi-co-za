@@ -1,5 +1,25 @@
 // Utility functions for the burial society system
 
+export const SECTIONS = [
+  'Tshilongwe',
+  'Tshifungwi',
+  'Vhusenga',
+  'Thondoni',
+  'Mbelengwa',
+  'Germany',
+  'Tshidangalani',
+] as const;
+
+export type Section = typeof SECTIONS[number];
+
+export const REQUEST_TYPES = [
+  { value: 'proof_of_address', label: 'Proof of Address' },
+  { value: 'stand_approval', label: 'Stand Approval (Personal/Business)' },
+  { value: 'sunday_trading', label: 'Sunday Trading Approval' },
+  { value: 'issue', label: 'Report an Issue' },
+  { value: 'general', label: 'General Enquiry' },
+] as const;
+
 export function getAge(dateOfBirth: string): number {
   const today = new Date();
   const birth = new Date(dateOfBirth);

@@ -17,13 +17,18 @@ interface DataContextType {
   burialCases: BurialCase[];
   payouts: Payout[];
   rules: RulesConfig | null;
+  requests: any[];
+  specialContributions: any[];
   loading: boolean;
   addHousehold: (h: TablesInsert<'households'>) => Promise<void>;
   addMember: (m: TablesInsert<'members'>) => Promise<void>;
   addPayment: (p: TablesInsert<'payments'>) => Promise<void>;
   addBurialCase: (c: TablesInsert<'burial_cases'>) => Promise<void>;
   addPayout: (p: TablesInsert<'payouts'>) => Promise<void>;
+  addRequest: (r: any) => Promise<void>;
+  addSpecialContribution: (s: any) => Promise<void>;
   updateCaseStatus: (id: string, status: string) => Promise<void>;
+  updateRequestStatus: (id: string, status: string, notes?: string) => Promise<void>;
   updateRules: (r: Partial<RulesConfig>) => Promise<void>;
   checkEligibility: (memberId: string, householdId: string) => { eligible: boolean; reason: string };
   refresh: () => void;
@@ -38,17 +43,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [burialCases, setBurialCases] = useState<BurialCase[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [rules, setRules] = useState<RulesConfig | null>(null);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [specialContributions, setSpecialContributions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [hRes, mRes, pRes, bcRes, poRes, rRes] = await Promise.all([
+    const [hRes, mRes, pRes, bcRes, poRes, rRes, reqRes, scRes] = await Promise.all([
       supabase.from('households').select('*').order('created_at', { ascending: false }),
       supabase.from('members').select('*').order('created_at', { ascending: false }),
       supabase.from('payments').select('*').order('created_at', { ascending: false }),
       supabase.from('burial_cases').select('*').order('created_at', { ascending: false }),
       supabase.from('payouts').select('*').order('created_at', { ascending: false }),
       supabase.from('rules_config').select('*').limit(1).single(),
+      supabase.from('requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('special_contributions').select('*').order('created_at', { ascending: false }),
     ]);
     if (hRes.data) setHouseholds(hRes.data);
     if (mRes.data) setMembers(mRes.data);
@@ -56,27 +65,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (bcRes.data) setBurialCases(bcRes.data);
     if (poRes.data) setPayouts(poRes.data);
     if (rRes.data) setRules(rRes.data);
+    if (reqRes.data) setRequests(reqRes.data);
+    if (scRes.data) setSpecialContributions(scRes.data);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addHousehold = async (h: TablesInsert<'households'>) => {
-    const { error } = await supabase.from('households').insert(h);
+    const { error } = await supabase.from('households').insert(h as any);
     if (error) { toast.error(error.message); return; }
     toast.success('Household added');
     fetchAll();
   };
 
   const addMember = async (m: TablesInsert<'members'>) => {
-    const { error } = await supabase.from('members').insert(m);
+    const { error } = await supabase.from('members').insert(m as any);
     if (error) { toast.error(error.message); return; }
     toast.success('Member added');
     fetchAll();
   };
 
   const addPayment = async (p: TablesInsert<'payments'>) => {
-    const { error } = await supabase.from('payments').insert(p);
+    const { error } = await supabase.from('payments').insert(p as any);
     if (error) { toast.error(error.message); return; }
     toast.success('Payment recorded');
     fetchAll();
@@ -125,9 +136,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
     fetchAll();
   };
 
+  const addRequest = async (r: any) => {
+    const { error } = await supabase.from('requests').insert(r);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Request submitted');
+    fetchAll();
+  };
+
+  const addSpecialContribution = async (s: any) => {
+    const { error } = await supabase.from('special_contributions').insert(s);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Special contribution created');
+    fetchAll();
+  };
+
   const updateCaseStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('burial_cases').update({ status }).eq('id', id);
     if (error) { toast.error(error.message); return; }
+    fetchAll();
+  };
+
+  const updateRequestStatus = async (id: string, status: string, notes?: string) => {
+    const { error } = await supabase.from('requests').update({
+      status,
+      admin_notes: notes || null,
+      resolved_at: new Date().toISOString(),
+    } as any).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Request ${status}`);
     fetchAll();
   };
 
@@ -141,9 +177,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      households, members, payments, burialCases, payouts, rules, loading,
-      addHousehold, addMember, addPayment, addBurialCase, addPayout,
-      updateCaseStatus, updateRules, checkEligibility, refresh: fetchAll,
+      households, members, payments, burialCases, payouts, rules, requests, specialContributions, loading,
+      addHousehold, addMember, addPayment, addBurialCase, addPayout, addRequest, addSpecialContribution,
+      updateCaseStatus, updateRequestStatus, updateRules, checkEligibility, refresh: fetchAll,
     }}>
       {children}
     </DataContext.Provider>

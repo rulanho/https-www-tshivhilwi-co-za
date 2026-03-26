@@ -8,14 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, MessageSquare, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Plus, MessageSquare, FileText, CheckCircle, Clock, XCircle, Download, AlertTriangle } from 'lucide-react';
 import { REQUEST_TYPES } from '@/lib/data';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
 
 export default function Requests() {
-  const { households, members, requests, addRequest, updateRequestStatus, refresh } = useData();
+  const { households, members, requests, addRequest, updateRequestStatus } = useData();
   const { roles } = useAuth();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
@@ -30,7 +29,7 @@ export default function Requests() {
 
   const filtered = filter === 'all'
     ? requests
-    : requests.filter(r => r.status === filter);
+    : requests.filter((r: any) => r.status === filter);
 
   const handleAdd = () => {
     if (!form.household_id || !form.subject) return;
@@ -51,10 +50,22 @@ export default function Requests() {
     setSelectedRequest(null);
   };
 
-  const statusIcon = (s: string) => {
-    if (s === 'approved') return <CheckCircle className="h-4 w-4 text-primary" />;
-    if (s === 'rejected') return <XCircle className="h-4 w-4 text-destructive" />;
-    return <Clock className="h-4 w-4 text-muted-foreground" />;
+  const handleDownloadProof = (req: any) => {
+    const hh = households.find(h => h.id === req.household_id);
+    if (!hh) return;
+    const approvedAt = req.approved_at || req.resolved_at;
+    generateProofOfAddress({
+      householdName: hh.name,
+      contactPerson: hh.contact_person,
+      standNumber: hh.stand_number || '',
+      section: hh.section || '',
+      address: hh.address || '',
+      gpsLat: hh.gps_lat ?? undefined,
+      gpsLng: hh.gps_lng ?? undefined,
+      approvedAt,
+      expiresAt: getExpiryDate(approvedAt),
+      requestId: req.id,
+    });
   };
 
   const statusVariant = (s: string) => {
@@ -133,17 +144,22 @@ export default function Requests() {
       </div>
 
       <div className="grid gap-3">
-        {filtered.map(r => {
-          const req = r as any;
+        {filtered.map((r: any) => {
+          const req = r;
           const hh = households.find(h => h.id === req.household_id);
           const mem = req.member_id ? members.find(m => m.id === req.member_id) : null;
+          const isProofRequest = req.request_type === 'proof_of_address';
+          const approvedAt = req.approved_at || req.resolved_at;
+          const expired = isProofRequest && req.status === 'approved' && approvedAt ? isProofExpired(approvedAt) : false;
+          const canDownload = isProofRequest && req.status === 'approved' && !expired;
+
           return (
             <Card key={req.id} className="hover:shadow-md transition-shadow">
               <CardContent className="py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      {req.request_type === 'proof_of_address' ? <FileText className="h-5 w-5 text-primary" /> : <MessageSquare className="h-5 w-5 text-primary" />}
+                      {isProofRequest ? <FileText className="h-5 w-5 text-primary" /> : <MessageSquare className="h-5 w-5 text-primary" />}
                     </div>
                     <div>
                       <p className="font-medium">{req.subject}</p>
@@ -156,11 +172,31 @@ export default function Requests() {
                           <span className="font-medium">Response:</span> {req.admin_notes}
                         </p>
                       )}
+                      {isProofRequest && req.status === 'approved' && approvedAt && (
+                        <div className="mt-2">
+                          {expired ? (
+                            <p className="text-xs text-destructive flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Expired on {new Date(getExpiryDate(approvedAt)).toLocaleDateString('en-ZA')} — request a new one
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Valid until {new Date(getExpiryDate(approvedAt)).toLocaleDateString('en-ZA')}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">{new Date(req.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {expired && <Badge variant="destructive">Expired</Badge>}
                     <Badge variant={statusVariant(req.status)}>{req.status}</Badge>
+                    {canDownload && (
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadProof(req)}>
+                        <Download className="h-4 w-4 mr-1" />Proof
+                      </Button>
+                    )}
                     {isAdmin && req.status === 'pending' && (
                       <Dialog open={selectedRequest === req.id} onOpenChange={(o) => { if (!o) setSelectedRequest(null); else setSelectedRequest(req.id); }}>
                         <DialogTrigger asChild>

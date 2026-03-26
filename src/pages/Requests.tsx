@@ -14,6 +14,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
 import { supabase } from '@/integrations/supabase/client';
 
+interface SectionLeader {
+  section: string;
+  full_name: string;
+  phone: string | null;
+}
+
 export default function Requests() {
   const { households, members, requests, addRequest, updateRequestStatus } = useData();
   const { roles } = useAuth();
@@ -21,8 +27,15 @@ export default function Requests() {
   const [filter, setFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [sectionLeaders, setSectionLeaders] = useState<SectionLeader[]>([]);
 
   const isAdmin = roles.includes('admin') || roles.includes('secretary');
+
+  useEffect(() => {
+    supabase.from('section_leaders').select('section, full_name, phone').then(({ data }) => {
+      if (data) setSectionLeaders(data);
+    });
+  }, []);
 
   const [form, setForm] = useState({
     household_id: '', member_id: '', request_type: 'general', subject: '', description: '',

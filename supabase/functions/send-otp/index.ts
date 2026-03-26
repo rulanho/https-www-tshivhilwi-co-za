@@ -29,34 +29,32 @@ Deno.serve(async (req) => {
     const normalizedPhone = phone.replace(/\s+/g, "");
 
     // Check if this phone exists in households
-    const { data: household, error: hhError } = await supabase
+    const { data: householdMatches, error: hhError } = await supabase
       .from("households")
       .select("id, name, phone")
       .eq("phone", normalizedPhone)
-      .eq("status", "active")
-      .single();
+      .eq("status", "active");
 
-    if (hhError || !household) {
-      // Also check members phone_1 / phone_2
-      const { data: member } = await supabase
-        .from("members")
-        .select("id, household_id, phone_1, phone_2")
-        .or(`phone_1.eq.${normalizedPhone},phone_2.eq.${normalizedPhone}`)
-        .eq("status", "active")
-        .single();
-
-      if (!member) {
-        return new Response(
-          JSON.stringify({ error: "Phone number not registered in any household. Contact your community leader." }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Use member's household
-      return await generateAndSendCode(supabase, member.household_id, normalizedPhone);
+    if (householdMatches && householdMatches.length > 0) {
+      // Use the first matching household
+      return await generateAndSendCode(supabase, householdMatches[0].id, normalizedPhone);
     }
 
-    return await generateAndSendCode(supabase, household.id, normalizedPhone);
+    // Also check members phone_1 / phone_2
+    const { data: memberMatches } = await supabase
+      .from("members")
+      .select("id, household_id, phone_1, phone_2")
+      .or(`phone_1.eq.${normalizedPhone},phone_2.eq.${normalizedPhone}`)
+      .eq("status", "active");
+
+    if (memberMatches && memberMatches.length > 0) {
+      return await generateAndSendCode(supabase, memberMatches[0].household_id, normalizedPhone);
+    }
+
+    return new Response(
+      JSON.stringify({ error: "Phone number not registered in any household. Contact your community leader." }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("send-otp error:", error);
     return new Response(JSON.stringify({ error: error.message }), {

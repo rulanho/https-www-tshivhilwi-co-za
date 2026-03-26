@@ -233,9 +233,13 @@ export default function Households() {
           <Button variant="ghost" size="sm" onClick={() => setSelectedHh(null)} className="mb-4">← Back to list</Button>
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <CardTitle className="font-display">{viewHousehold.name}</CardTitle>
-                <Badge variant={viewHousehold.status === 'active' ? 'default' : 'secondary'}>{viewHousehold.status}</Badge>
+                {canEdit && (
+                  <Button variant="outline" size="sm" onClick={openEditDialog}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" />Edit
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>

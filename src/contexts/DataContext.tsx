@@ -157,11 +157,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateRequestStatus = async (id: string, status: string, notes?: string) => {
-    const { error } = await supabase.from('requests').update({
+    const updateData: any = {
       status,
       admin_notes: notes || null,
       resolved_at: new Date().toISOString(),
-    } as any).eq('id', id);
+    };
+    if (status === 'approved') {
+      updateData.approved_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from('requests').update(updateData).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Request ${status}`);
     fetchAll();

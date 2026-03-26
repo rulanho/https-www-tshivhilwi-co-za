@@ -68,6 +68,44 @@ export type Database = {
           },
         ]
       }
+      household_access_codes: {
+        Row: {
+          access_code: string
+          created_at: string
+          household_id: string
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          phone: string
+        }
+        Insert: {
+          access_code: string
+          created_at?: string
+          household_id: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          phone: string
+        }
+        Update: {
+          access_code?: string
+          created_at?: string
+          household_id?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_access_codes_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       households: {
         Row: {
           address: string | null
@@ -293,6 +331,7 @@ export type Database = {
       requests: {
         Row: {
           admin_notes: string | null
+          approved_at: string | null
           created_at: string
           description: string | null
           household_id: string
@@ -307,6 +346,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          approved_at?: string | null
           created_at?: string
           description?: string | null
           household_id: string
@@ -321,6 +361,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          approved_at?: string | null
           created_at?: string
           description?: string | null
           household_id?: string
@@ -374,6 +415,33 @@ export type Database = {
           monthly_contribution?: number
           payout_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      section_leaders: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          section: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          section: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          section?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -483,6 +551,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_section_leader: {
+        Args: { _section: string; _user_id: string }
         Returns: boolean
       }
     }

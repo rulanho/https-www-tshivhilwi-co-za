@@ -16,6 +16,7 @@ import Reports from "@/pages/Reports";
 import Profile from "@/pages/Profile";
 import Requests from "@/pages/Requests";
 import SpecialContributions from "@/pages/SpecialContributions";
+import SectionLeaders from "@/pages/SectionLeaders";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -48,6 +49,7 @@ function ProtectedRoutes() {
           <Route path="/payouts" element={<Payouts />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/special-contributions" element={<SpecialContributions />} />
+          <Route path="/section-leaders" element={<SectionLeaders />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage />} />

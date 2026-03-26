@@ -74,16 +74,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addHousehold = async (h: TablesInsert<'households'>) => {
-    const { error } = await supabase.from('households').insert(h as any);
+    const { data, error } = await supabase.from('households').insert(h as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Household added');
+    logActivity('add_household', 'household', data?.id, { name: h.name });
     fetchAll();
   };
 
   const addMember = async (m: TablesInsert<'members'>) => {
-    const { error } = await supabase.from('members').insert(m as any);
+    const { data, error } = await supabase.from('members').insert(m as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Member added');
+    logActivity('add_member', 'member', data?.id, { name: m.full_name });
     fetchAll();
   };
 

@@ -251,7 +251,19 @@ export default function Households() {
                 <div><span className="text-muted-foreground">Address:</span> {viewHousehold.address}</div>
                 <div><span className="text-muted-foreground">Joined:</span> {viewHousehold.join_date}</div>
                 {(viewHousehold as any).gps_lat && (
-                  <div className="col-span-2"><span className="text-muted-foreground">GPS:</span> {(viewHousehold as any).gps_lat?.toFixed(5)}, {(viewHousehold as any).gps_lng?.toFixed(5)}</div>
+                  <>
+                    <div className="col-span-2"><span className="text-muted-foreground">GPS:</span> {(viewHousehold as any).gps_lat?.toFixed(6)}, {(viewHousehold as any).gps_lng?.toFixed(6)}</div>
+                    <div className="col-span-2">
+                      <a
+                        href={`https://www.google.com/maps?q=${(viewHousehold as any).gps_lat},${(viewHousehold as any).gps_lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <MapPin className="h-3.5 w-3.5" />View on Google Maps
+                      </a>
+                    </div>
+                  </>
                 )}
               </div>
             </CardContent>

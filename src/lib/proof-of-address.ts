@@ -81,6 +81,7 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
             <tr><td>Section</td><td>${data.section || 'N/A'}</td></tr>
             <tr><td>Physical Address</td><td>${data.address || 'Tshivhilwi Village, Limpopo'}</td></tr>
             ${data.gpsLat ? `<tr><td>GPS Coordinates</td><td>${data.gpsLat.toFixed(6)}, ${data.gpsLng?.toFixed(6)}</td></tr>` : ''}
+            ${data.gpsLat ? `<tr><td>Map Link</td><td><a href="https://www.google.com/maps?q=${data.gpsLat},${data.gpsLng}" style="color:#1a3a5c;">View on Google Maps</a></td></tr>` : ''}
             <tr><td>Date Issued</td><td>${issueDate}</td></tr>
             <tr><td>Valid Until</td><td>${expiryDate}</td></tr>
           </table>

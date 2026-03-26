@@ -137,77 +137,85 @@ export default function SectionLeaders() {
     sectionLeaderMap.set(l.section, list);
   });
 
+  const handleLinkHouseholdHead = async (householdId: string, email: string) => {
+    // Find user by email in profiles
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .ilike('full_name', `%${email}%`);
+
+    if (!profiles || profiles.length === 0) {
+      toast.error('No registered user found. The household head must sign up first.');
+      return;
+    }
+
+    // Assign household_head role
+    const userId = profiles[0].user_id;
+    const { error: roleError } = await supabase.from('user_roles').upsert({
+      user_id: userId,
+      role: 'household_head' as any,
+    }, { onConflict: 'user_id,role' });
+
+    if (roleError && !roleError.message.includes('duplicate')) {
+      toast.error(roleError.message);
+      return;
+    }
+
+    // Link to household
+    const { error: hhError } = await supabase
+      .from('households')
+      .update({ head_user_id: userId } as any)
+      .eq('id', householdId);
+
+    if (hhError) {
+      toast.error(hhError.message);
+      return;
+    }
+
+    toast.success('Household head linked successfully');
+    fetchData();
+  };
+
   return (
     <div>
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="page-title">Section Leaders & Access</h1>
-          <p className="page-subtitle">Manage community leaders and household login codes</p>
+          <h1 className="page-title">Section Leaders & Households</h1>
+          <p className="page-subtitle">Manage community leaders and household head accounts</p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm"><Key className="h-4 w-4 mr-1" />Generate Code</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Generate Household Access Code</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Create a phone number + code pair so a household head can log in to view their household information.
-                </p>
-                <div>
-                  <Label>Household</Label>
-                  <Select onValueChange={v => setCodeForm(f => ({ ...f, household_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select household" /></SelectTrigger>
-                    <SelectContent>
-                      {households.filter(h => h.status === 'active').map(h => (
-                        <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Phone Number</Label>
-                  <Input value={codeForm.phone} onChange={e => setCodeForm(f => ({ ...f, phone: e.target.value }))} placeholder="e.g. 071 234 5678" />
-                </div>
-                <Button onClick={handleCreateCode} className="w-full">Generate Code</Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Leader</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle className="font-display">Register Section Leader</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                The person must already have a staff account (sign up via email first).
+              </p>
+              <div>
+                <Label>Section</Label>
+                <Select onValueChange={v => setForm(f => ({ ...f, section: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                  <SelectContent>
+                    {SECTIONS.map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Leader</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Register Section Leader</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  The person must already have a staff account (sign up via email first).
-                </p>
-                <div>
-                  <Label>Section</Label>
-                  <Select onValueChange={v => setForm(f => ({ ...f, section: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
-                    <SelectContent>
-                      {SECTIONS.map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Leader Name (search registered users)</Label>
-                  <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Search by name..." />
-                </div>
-                <div>
-                  <Label>Phone (optional)</Label>
-                  <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-                </div>
-                <Button onClick={handleAddLeader} className="w-full">Register Leader</Button>
+              <div>
+                <Label>Leader Name (search registered users)</Label>
+                <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Search by name..." />
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div>
+                <Label>Phone (optional)</Label>
+                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <Button onClick={handleAddLeader} className="w-full">Register Leader</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
@@ -243,33 +251,54 @@ export default function SectionLeaders() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-display">Household Access Codes</CardTitle>
+          <CardTitle className="font-display">Link Household Head Accounts</CardTitle>
         </CardHeader>
         <CardContent>
-          {accessCodes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No access codes generated yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {accessCodes.map(ac => {
-                const hh = households.find(h => h.id === ac.household_id);
-                return (
-                  <div key={ac.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="text-sm font-medium">{hh?.name || 'Unknown'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Phone: {ac.phone} · Code: <span className="font-mono font-bold">{ac.access_code}</span>
-                      </p>
-                    </div>
-                    <Badge variant={ac.is_active ? 'default' : 'secondary'}>
-                      {ac.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <p className="text-sm text-muted-foreground mb-4">
+            After a household head signs up with their email, search their name below to link them to their household.
+          </p>
+          <div className="space-y-3">
+            {households.filter(h => h.status === 'active').map(h => (
+              <div key={h.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div>
+                  <p className="text-sm font-medium">{h.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {h.section || 'No section'} · {h.contact_person}
+                    {(h as any).head_user_id && <Badge className="ml-2" variant="default">Linked</Badge>}
+                  </p>
+                </div>
+                {!(h as any).head_user_id && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm"><Key className="h-3.5 w-3.5 mr-1" />Link</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Link Household Head: {h.name}</DialogTitle></DialogHeader>
+                      <LinkHouseholdForm householdId={h.id} onLink={handleLinkHouseholdHead} />
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function LinkHouseholdForm({ householdId, onLink }: { householdId: string; onLink: (id: string, name: string) => void }) {
+  const [search, setSearch] = useState('');
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">Enter the household head's name as they registered.</p>
+      <div>
+        <Label>Name</Label>
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search registered user..." />
+      </div>
+      <Button onClick={() => onLink(householdId, search)} className="w-full" disabled={!search}>
+        Link Account
+      </Button>
     </div>
   );
 }

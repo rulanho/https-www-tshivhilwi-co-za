@@ -113,6 +113,7 @@ export type Database = {
           created_at: string
           gps_lat: number | null
           gps_lng: number | null
+          head_user_id: string | null
           id: string
           join_date: string
           name: string
@@ -128,6 +129,7 @@ export type Database = {
           created_at?: string
           gps_lat?: number | null
           gps_lng?: number | null
+          head_user_id?: string | null
           id?: string
           join_date?: string
           name: string
@@ -143,6 +145,7 @@ export type Database = {
           created_at?: string
           gps_lat?: number | null
           gps_lng?: number | null
+          head_user_id?: string | null
           id?: string
           join_date?: string
           name?: string
@@ -559,7 +562,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "treasurer" | "secretary"
+      app_role: "admin" | "treasurer" | "secretary" | "household_head"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -687,7 +690,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "treasurer", "secretary"],
+      app_role: ["admin", "treasurer", "secretary", "household_head"],
     },
   },
 } as const

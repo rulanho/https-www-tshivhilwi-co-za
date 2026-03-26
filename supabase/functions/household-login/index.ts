@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,24 +23,37 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Find household by stand number
-    const { data: household, error: hhError } = await supabase
+    // Normalize stand number - trim and try multiple patterns
+    const trimmed = stand_number.trim();
+    
+    // Try exact match first, then partial/ilike
+    let household: any = null;
+    let hhError: any = null;
+
+    // Try ilike with the raw input
+    const result = await adminClient
       .from("households")
       .select("id, name, contact_person, section, stand_number")
-      .ilike("stand_number", stand_number.trim())
-      .single();
+      .ilike("stand_number", `%${trimmed}%`);
 
-    if (hhError || !household) {
+    if (result.error || !result.data || result.data.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No household found with that stand number" }),
+        JSON.stringify({ error: "No household found with that stand number. Please check your stand number and try again." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // If multiple matches, try exact match
+    household = result.data.length === 1 
+      ? result.data[0] 
+      : result.data.find((h: any) => 
+          h.stand_number?.trim().toLowerCase() === trimmed.toLowerCase()
+        ) || result.data[0];
+
     // Find member by ID number in that household
-    const { data: member, error: memError } = await supabase
+    const { data: member, error: memError } = await adminClient
       .from("members")
       .select("id, full_name, id_number, email")
       .eq("household_id", household.id)
@@ -58,19 +71,17 @@ Deno.serve(async (req) => {
     const shadowEmail = `hh-${household.stand_number?.replace(/\s+/g, '-').toLowerCase()}@tshivhilwi.local`;
     const shadowPassword = `hh-${id_number}-${household.id.slice(0, 8)}`;
 
-    // Try to sign in first
-    const { data: signInData, error: signInError } = await supabase.auth.admin.listUsers();
-    const existingUser = signInData?.users?.find(u => u.email === shadowEmail);
+    // Check if user already exists
+    const { data: listData } = await adminClient.auth.admin.listUsers();
+    const existingUser = listData?.users?.find((u: any) => u.email === shadowEmail);
 
     let userId: string;
 
     if (existingUser) {
-      // Update password in case ID changed
-      await supabase.auth.admin.updateUser(existingUser.id, { password: shadowPassword });
+      await adminClient.auth.admin.updateUser(existingUser.id, { password: shadowPassword });
       userId = existingUser.id;
     } else {
-      // Create new user
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email: shadowEmail,
         password: shadowPassword,
         email_confirm: true,
@@ -86,21 +97,21 @@ Deno.serve(async (req) => {
     }
 
     // Ensure household_head role
-    await supabase.from("user_roles").upsert(
+    await adminClient.from("user_roles").upsert(
       { user_id: userId, role: "household_head" },
       { onConflict: "user_id,role" }
     );
 
     // Link household to user
-    await supabase.from("households").update({ head_user_id: userId }).eq("id", household.id);
+    await adminClient.from("households").update({ head_user_id: userId }).eq("id", household.id);
 
     // Update profile
-    await supabase.from("profiles").upsert(
+    await adminClient.from("profiles").upsert(
       { user_id: userId, full_name: member.full_name },
       { onConflict: "user_id" }
     );
 
-    // Generate session token
+    // Generate session token using anon client
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const anonClient = createClient(supabaseUrl, anonKey);
     const { data: session, error: sessionError } = await anonClient.auth.signInWithPassword({

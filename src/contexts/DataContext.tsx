@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { logActivity } from '@/lib/audit';
 
 type Household = Tables<'households'>;
 type Member = Tables<'members'>;
@@ -73,34 +74,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addHousehold = async (h: TablesInsert<'households'>) => {
-    const { error } = await supabase.from('households').insert(h as any);
+    const { data, error } = await supabase.from('households').insert(h as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Household added');
+    logActivity('add_household', 'household', data?.id, { name: h.name });
     fetchAll();
   };
 
   const addMember = async (m: TablesInsert<'members'>) => {
-    const { error } = await supabase.from('members').insert(m as any);
+    const { data, error } = await supabase.from('members').insert(m as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Member added');
+    logActivity('add_member', 'member', data?.id, { name: m.full_name });
     fetchAll();
   };
 
   const addPayment = async (p: TablesInsert<'payments'>) => {
-    const { error } = await supabase.from('payments').insert(p as any);
+    const { data, error } = await supabase.from('payments').insert(p as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Payment recorded');
+    logActivity('record_payment', 'payment', data?.id, { household_id: p.household_id, amount: p.amount, month: p.payment_month });
     // Send SMS notification (fire and forget)
     supabase.functions.invoke('send-payment-notification', {
-      body: {
-        household_id: p.household_id,
-        amount: p.amount,
-        payment_month: p.payment_month,
-        type: 'payment',
-      },
+      body: { household_id: p.household_id, amount: p.amount, payment_month: p.payment_month, type: 'payment' },
     }).then(({ data }) => {
       if (data?.success) toast.info('SMS notification sent to household');
-    }).catch(() => { /* SMS is optional */ });
+    }).catch(() => {});
     fetchAll();
   };
 
@@ -134,36 +133,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
       eligibility_status: eligible ? 'eligible' : 'not_eligible',
       eligibility_reason: reason,
     };
-    const { error } = await supabase.from('burial_cases').insert(caseData);
+    const { data, error } = await supabase.from('burial_cases').insert(caseData).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Burial case registered');
+    logActivity('register_burial_case', 'burial_case', data?.id, { member_id: c.member_id, eligible });
     fetchAll();
   };
 
   const addPayout = async (p: TablesInsert<'payouts'>) => {
-    const { error } = await supabase.from('payouts').insert(p);
+    const { data, error } = await supabase.from('payouts').insert(p).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Payout recorded');
+    logActivity('record_payout', 'payout', data?.id, { case_id: p.case_id, amount: p.approved_amount });
     fetchAll();
   };
 
   const addRequest = async (r: any) => {
-    const { error } = await supabase.from('requests').insert(r);
+    const { data, error } = await supabase.from('requests').insert(r).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Request submitted');
+    logActivity('submit_request', 'request', data?.id, { type: r.request_type, subject: r.subject });
     fetchAll();
   };
 
   const addSpecialContribution = async (s: any) => {
-    const { error } = await supabase.from('special_contributions').insert(s);
+    const { data, error } = await supabase.from('special_contributions').insert(s).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Special contribution created');
+    logActivity('create_special_contribution', 'special_contribution', data?.id, { title: s.title });
     fetchAll();
   };
 
   const updateCaseStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('burial_cases').update({ status }).eq('id', id);
     if (error) { toast.error(error.message); return; }
+    logActivity('update_case_status', 'burial_case', id, { status });
     fetchAll();
   };
 
@@ -179,6 +183,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from('requests').update(updateData).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Request ${status}`);
+    logActivity('resolve_request', 'request', id, { status, notes });
     fetchAll();
   };
 
@@ -187,6 +192,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from('rules_config').update(r).eq('id', rules.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Settings saved');
+    logActivity('update_rules', 'rules_config', rules.id, r);
     fetchAll();
   };
 

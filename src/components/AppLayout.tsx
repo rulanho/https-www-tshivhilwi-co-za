@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield } from 'lucide-react';
+import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ const links = [
   { to: '/special-contributions', icon: HandCoins, label: 'Special Levies' },
   { to: '/section-leaders', icon: Shield, label: 'Leaders & Access' },
   { to: '/reports', icon: FileText, label: 'Reports' },
+  { to: '/activity-log', icon: Activity, label: 'Activity Log' },
   { to: '/profile', icon: User, label: 'Profile' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];

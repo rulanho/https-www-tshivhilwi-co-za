@@ -17,13 +17,15 @@ import Profile from "@/pages/Profile";
 import Requests from "@/pages/Requests";
 import SpecialContributions from "@/pages/SpecialContributions";
 import SectionLeaders from "@/pages/SectionLeaders";
+import ActivityLog from "@/pages/ActivityLog";
+import HouseholdPortal from "@/pages/HouseholdPortal";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, hasRole } = useAuth();
 
   if (loading) {
     return (
@@ -38,6 +40,13 @@ function ProtectedRoutes() {
 
   if (!user) return <Auth />;
 
+  // Household heads get their own portal
+  const isHouseholdOnly = hasRole('household_head') && !hasRole('admin') && !hasRole('treasurer') && !hasRole('secretary');
+
+  if (isHouseholdOnly) {
+    return <HouseholdPortal />;
+  }
+
   return (
     <DataProvider>
       <AppLayout>
@@ -51,6 +60,7 @@ function ProtectedRoutes() {
           <Route path="/special-contributions" element={<SpecialContributions />} />
           <Route path="/section-leaders" element={<SectionLeaders />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/activity-log" element={<ActivityLog />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />

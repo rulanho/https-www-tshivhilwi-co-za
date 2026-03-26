@@ -310,6 +310,30 @@ export default function Households() {
               e.target.value = '';
             }}
           />
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle className="font-display">Edit Household</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Household Name</Label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} /></div>
+                <div><Label>Contact Person</Label><Input value={editForm.contact_person} onChange={e => setEditForm(f => ({ ...f, contact_person: e.target.value }))} /></div>
+                <div><Label>Phone</Label><Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} /></div>
+                <div>
+                  <Label>Section</Label>
+                  <Select value={editForm.section} onValueChange={v => setEditForm(f => ({ ...f, section: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                    <SelectContent>
+                      {SECTIONS.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Stand Number</Label><Input value={editForm.stand_number} onChange={e => setEditForm(f => ({ ...f, stand_number: e.target.value }))} /></div>
+                <div><Label>Address</Label><Input value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                <Button onClick={handleEditHousehold} className="w-full">Save Changes</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="grid gap-3">

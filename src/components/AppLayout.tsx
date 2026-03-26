@@ -14,6 +14,7 @@ const links = [
   { to: '/special-contributions', icon: HandCoins, label: 'Special Levies' },
   { to: '/section-leaders', icon: Shield, label: 'Leaders & Access' },
   { to: '/reports', icon: FileText, label: 'Reports' },
+  { to: '/activity-log', icon: Activity, label: 'Activity Log' },
   { to: '/profile', icon: User, label: 'Profile' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];

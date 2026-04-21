@@ -84,8 +84,8 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-display">Tshivhilwi Village</CardTitle>
-          <p className="text-sm text-muted-foreground">Burial Society Management System</p>
+          <CardTitle className="text-2xl font-display">VillageConnect Limpopo</CardTitle>
+          <p className="text-sm text-muted-foreground">Multi-Community Management Platform</p>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>

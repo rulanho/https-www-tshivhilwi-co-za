@@ -200,7 +200,6 @@ export default function SectionLeaders() {
                 <Select onValueChange={v => setForm(f => ({ ...f, section: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                   <SelectContent>
-                    {SECTIONS.map(s => (
                     {villageSections.map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}

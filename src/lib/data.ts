@@ -1,16 +1,5 @@
-// Utility functions for the burial society system
-
-export const SECTIONS = [
-  'Tshilongwe',
-  'Tshifungwi',
-  'Vhusenga',
-  'Thondoni',
-  'Mbelengwa',
-  'Germany',
-  'Tshidangalani',
-] as const;
-
-export type Section = typeof SECTIONS[number];
+// Utility functions for VillageConnect Limpopo
+// Sections are now dynamic per village - loaded from villages.sections
 
 export const REQUEST_TYPES = [
   { value: 'proof_of_address', label: 'Proof of Address' },

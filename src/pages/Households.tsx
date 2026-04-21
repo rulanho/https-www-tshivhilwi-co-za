@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Users, ChevronRight, MapPin, Camera, Pencil } from 'lucide-react';
-import { getAge, SECTIONS } from '@/lib/data';
+import { getAge } from '@/lib/data';
+import { useVillage } from '@/contexts/VillageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,6 +26,8 @@ export default function Households() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingMemberId, setUploadingMemberId] = useState<string | null>(null);
   const canEdit = hasRole('admin') || hasRole('secretary');
+  const { currentVillage } = useVillage();
+  const villageSections = currentVillage?.sections || [];
 
   const [hhForm, setHhForm] = useState({
     name: '', contact_person: '', phone: '', address: '',
@@ -147,7 +150,7 @@ export default function Households() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="page-title">Households</h1>
-          <p className="page-subtitle">Tshivhilwi Village — Manage registered households and members</p>
+          <p className="page-subtitle">{currentVillage?.name || 'Village'} — Manage registered households and members</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={memOpen} onOpenChange={setMemOpen}>
@@ -204,7 +207,7 @@ export default function Households() {
                   <Select onValueChange={v => setHhForm(f => ({ ...f, section: v }))}>
                     <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                     <SelectContent>
-                      {SECTIONS.map(s => (
+                      {villageSections.map(s => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
                     </SelectContent>
@@ -334,7 +337,7 @@ export default function Households() {
                   <Select value={editForm.section} onValueChange={v => setEditForm(f => ({ ...f, section: v }))}>
                     <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                     <SelectContent>
-                      {SECTIONS.map(s => (
+                      {villageSections.map(s => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
                     </SelectContent>

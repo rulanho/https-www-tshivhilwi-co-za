@@ -165,7 +165,7 @@ export default function HouseholdPortal() {
       {/* Header */}
       <header className="bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-sidebar-foreground font-display">Tshivhilwi Village</h1>
+          <h1 className="text-lg font-bold text-sidebar-foreground font-display">VillageConnect</h1>
           <p className="text-xs text-sidebar-foreground/60">Household Portal</p>
         </div>
         <div className="flex items-center gap-3">

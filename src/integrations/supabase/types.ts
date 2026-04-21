@@ -24,6 +24,7 @@ export type Database = {
           id: string
           user_id: string
           user_name: string | null
+          village_id: string | null
         }
         Insert: {
           action: string
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           user_id: string
           user_name?: string | null
+          village_id?: string | null
         }
         Update: {
           action?: string
@@ -44,8 +46,17 @@ export type Database = {
           id?: string
           user_id?: string
           user_name?: string | null
+          village_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       burial_cases: {
         Row: {
@@ -59,6 +70,7 @@ export type Database = {
           member_id: string
           status: string
           updated_at: string
+          village_id: string | null
         }
         Insert: {
           created_at?: string
@@ -71,6 +83,7 @@ export type Database = {
           member_id: string
           status?: string
           updated_at?: string
+          village_id?: string | null
         }
         Update: {
           created_at?: string
@@ -83,6 +96,7 @@ export type Database = {
           member_id?: string
           status?: string
           updated_at?: string
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -99,7 +113,35 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "burial_cases_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      districts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          province: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          province?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          province?: string
+        }
+        Relationships: []
       }
       household_access_codes: {
         Row: {
@@ -155,6 +197,7 @@ export type Database = {
           stand_number: string | null
           status: string
           updated_at: string
+          village_id: string | null
         }
         Insert: {
           address?: string | null
@@ -171,6 +214,7 @@ export type Database = {
           stand_number?: string | null
           status?: string
           updated_at?: string
+          village_id?: string | null
         }
         Update: {
           address?: string | null
@@ -187,8 +231,17 @@ export type Database = {
           stand_number?: string | null
           status?: string
           updated_at?: string
+          village_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "households_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
@@ -246,6 +299,35 @@ export type Database = {
           },
         ]
       }
+      municipalities: {
+        Row: {
+          created_at: string
+          district_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          district_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          district_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipalities_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -259,6 +341,7 @@ export type Database = {
           receipt_image_url: string | null
           recorded_by: string | null
           status: string
+          village_id: string | null
         }
         Insert: {
           amount?: number
@@ -272,6 +355,7 @@ export type Database = {
           receipt_image_url?: string | null
           recorded_by?: string | null
           status?: string
+          village_id?: string | null
         }
         Update: {
           amount?: number
@@ -285,6 +369,7 @@ export type Database = {
           receipt_image_url?: string | null
           recorded_by?: string | null
           status?: string
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -292,6 +377,13 @@ export type Database = {
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
             referencedColumns: ["id"]
           },
         ]
@@ -306,6 +398,7 @@ export type Database = {
           notes: string | null
           payment_date: string
           payment_method: string
+          village_id: string | null
         }
         Insert: {
           approved_amount: number
@@ -316,6 +409,7 @@ export type Database = {
           notes?: string | null
           payment_date?: string
           payment_method: string
+          village_id?: string | null
         }
         Update: {
           approved_amount?: number
@@ -326,6 +420,7 @@ export type Database = {
           notes?: string | null
           payment_date?: string
           payment_method?: string
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -333,6 +428,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "burial_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
             referencedColumns: ["id"]
           },
         ]
@@ -379,6 +481,7 @@ export type Database = {
           status: string
           subject: string
           updated_at: string
+          village_id: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -394,6 +497,7 @@ export type Database = {
           status?: string
           subject: string
           updated_at?: string
+          village_id?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -409,6 +513,7 @@ export type Database = {
           status?: string
           subject?: string
           updated_at?: string
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -425,6 +530,13 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "requests_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rules_config: {
@@ -435,6 +547,7 @@ export type Database = {
           monthly_contribution: number
           payout_amount: number
           updated_at: string
+          village_id: string | null
         }
         Insert: {
           id?: string
@@ -443,6 +556,7 @@ export type Database = {
           monthly_contribution?: number
           payout_amount?: number
           updated_at?: string
+          village_id?: string | null
         }
         Update: {
           id?: string
@@ -451,8 +565,17 @@ export type Database = {
           monthly_contribution?: number
           payout_amount?: number
           updated_at?: string
+          village_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rules_config_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       section_leaders: {
         Row: {
@@ -462,6 +585,7 @@ export type Database = {
           phone: string | null
           section: string
           user_id: string
+          village_id: string | null
         }
         Insert: {
           created_at?: string
@@ -470,6 +594,7 @@ export type Database = {
           phone?: string | null
           section: string
           user_id: string
+          village_id?: string | null
         }
         Update: {
           created_at?: string
@@ -478,8 +603,17 @@ export type Database = {
           phone?: string | null
           section?: string
           user_id?: string
+          village_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "section_leaders_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       special_contribution_payments: {
         Row: {
@@ -490,6 +624,7 @@ export type Database = {
           id: string
           payment_date: string | null
           status: string
+          village_id: string | null
         }
         Insert: {
           amount?: number
@@ -499,6 +634,7 @@ export type Database = {
           id?: string
           payment_date?: string | null
           status?: string
+          village_id?: string | null
         }
         Update: {
           amount?: number
@@ -508,6 +644,7 @@ export type Database = {
           id?: string
           payment_date?: string | null
           status?: string
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -524,6 +661,13 @@ export type Database = {
             referencedRelation: "households"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "special_contribution_payments_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       special_contributions: {
@@ -536,6 +680,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          village_id: string | null
         }
         Insert: {
           amount_per_household?: number
@@ -546,6 +691,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          village_id?: string | null
         }
         Update: {
           amount_per_household?: number
@@ -556,8 +702,17 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          village_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "special_contributions_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -577,11 +732,80 @@ export type Database = {
         }
         Relationships: []
       }
+      user_village_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          village_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          village_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          village_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_village_assignments_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      villages: {
+        Row: {
+          created_at: string
+          created_by: string
+          district: string
+          id: string
+          municipality: string
+          name: string
+          sections: string[]
+          status: string
+          traditional_authority: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          district: string
+          id?: string
+          municipality: string
+          name: string
+          sections?: string[]
+          status?: string
+          traditional_authority?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          district?: string
+          id?: string
+          municipality?: string
+          name?: string
+          sections?: string[]
+          status?: string
+          traditional_authority?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_user_village_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -593,9 +817,18 @@ export type Database = {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
+      user_belongs_to_village: {
+        Args: { _user_id: string; _village_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      app_role: "admin" | "treasurer" | "secretary" | "household_head"
+      app_role:
+        | "admin"
+        | "treasurer"
+        | "secretary"
+        | "household_head"
+        | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -723,7 +956,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "treasurer", "secretary", "household_head"],
+      app_role: [
+        "admin",
+        "treasurer",
+        "secretary",
+        "household_head",
+        "super_admin",
+      ],
     },
   },
 } as const

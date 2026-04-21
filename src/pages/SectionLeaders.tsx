@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Shield, Trash2, Key } from 'lucide-react';
-import { SECTIONS } from '@/lib/data';
+import { useVillage } from '@/contexts/VillageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useData } from '@/contexts/DataContext';
@@ -44,6 +44,8 @@ export default function SectionLeaders() {
   const [codeForm, setCodeForm] = useState({ household_id: '', phone: '' });
 
   const isAdmin = hasRole('admin');
+  const { currentVillage } = useVillage();
+  const villageSections = currentVillage?.sections || [];
 
   const fetchData = async () => {
     setLoading(true);
@@ -198,7 +200,7 @@ export default function SectionLeaders() {
                 <Select onValueChange={v => setForm(f => ({ ...f, section: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                   <SelectContent>
-                    {SECTIONS.map(s => (
+                    {villageSections.map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                   </SelectContent>
@@ -219,7 +221,7 @@ export default function SectionLeaders() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        {SECTIONS.map(section => {
+        {villageSections.map(section => {
           const sectionLeaders = sectionLeaderMap.get(section) || [];
           return (
             <Card key={section}>

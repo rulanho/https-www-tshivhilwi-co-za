@@ -1,8 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity } from 'lucide-react';
+import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity, MapPin, ChevronDown, Globe } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useVillage } from '@/contexts/VillageContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -10,7 +12,7 @@ const links = [
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/burial-cases', icon: Skull, label: 'Burial Cases' },
   { to: '/payouts', icon: Banknote, label: 'Payouts' },
-  { to: '/requests', icon: MessageSquare, label: 'Requests' },
+  { to: '/requests', icon: MessageSquare, label: 'Community Services' },
   { to: '/special-contributions', icon: HandCoins, label: 'Special Levies' },
   { to: '/section-leaders', icon: Shield, label: 'Leaders & Access' },
   { to: '/reports', icon: FileText, label: 'Reports' },
@@ -19,14 +21,41 @@ const links = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
+const superAdminLinks = [
+  { to: '/villages', icon: Globe, label: 'Manage Villages' },
+];
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { signOut, profile, roles } = useAuth();
+  const { villages, currentVillage, setCurrentVillageId, isSuperAdmin } = useVillage();
+
+  const allLinks = isSuperAdmin ? [...superAdminLinks, ...links] : links;
+
+  const villageSwitcher = villages.length > 0 ? (
+    <div className="px-4 py-3 border-b border-sidebar-border">
+      <label className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50 mb-1.5 block">Village</label>
+      <Select value={currentVillage?.id || ''} onValueChange={setCurrentVillageId}>
+        <SelectTrigger className="bg-sidebar-accent/30 border-sidebar-border text-sidebar-foreground text-sm h-9">
+          <SelectValue placeholder="Select village" />
+        </SelectTrigger>
+        <SelectContent>
+          {villages.map(v => (
+            <SelectItem key={v.id} value={v.id}>
+              <span className="flex items-center gap-2">
+                <MapPin className="h-3 w-3" />{v.name}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : null;
 
   const nav = (
     <nav className="flex flex-col gap-1 px-3 py-4">
-      {links.map(link => {
+      {allLinks.map(link => {
         const active = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
         return (
           <NavLink
@@ -68,17 +97,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden lg:flex lg:w-64 flex-col bg-sidebar border-r border-sidebar-border">
         <div className="px-6 py-5 border-b border-sidebar-border">
           <h1 className="text-xl font-bold text-sidebar-foreground font-display tracking-tight">
-            Tshivhilwi Village
+            VillageConnect
           </h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-0.5">Burial Society System</p>
+          <p className="text-xs text-sidebar-foreground/60 mt-0.5">Limpopo Community Platform</p>
         </div>
+        {villageSwitcher}
         <div className="flex-1 overflow-y-auto">{nav}</div>
         {userSection}
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="lg:hidden flex items-center justify-between bg-sidebar px-4 py-3 border-b border-sidebar-border">
-          <h1 className="text-lg font-bold text-sidebar-foreground font-display">Tshivhilwi Village</h1>
+          <div>
+            <h1 className="text-lg font-bold text-sidebar-foreground font-display">VillageConnect</h1>
+            {currentVillage && <p className="text-[10px] text-sidebar-foreground/60">{currentVillage.name}</p>}
+          </div>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground">
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -92,6 +125,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, x: -200 }}
               className="lg:hidden fixed inset-0 z-50 bg-sidebar pt-16 flex flex-col"
             >
+              {villageSwitcher}
               <div className="flex-1">{nav}</div>
               {userSection}
             </motion.div>

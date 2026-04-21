@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { logActivity } from '@/lib/audit';
+import { useVillage } from '@/contexts/VillageContext';
 
 type Household = Tables<'households'>;
 type Member = Tables<'members'>;
@@ -38,6 +39,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const { currentVillage } = useVillage();
   const [households, setHouseholds] = useState<Household[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -49,16 +51,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
+    if (!currentVillage) { setLoading(false); return; }
+    const vid = currentVillage.id;
     setLoading(true);
     const [hRes, mRes, pRes, bcRes, poRes, rRes, reqRes, scRes] = await Promise.all([
-      supabase.from('households').select('*').order('created_at', { ascending: false }),
+      supabase.from('households').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
       supabase.from('members').select('*').order('created_at', { ascending: false }),
-      supabase.from('payments').select('*').order('created_at', { ascending: false }),
-      supabase.from('burial_cases').select('*').order('created_at', { ascending: false }),
-      supabase.from('payouts').select('*').order('created_at', { ascending: false }),
-      supabase.from('rules_config').select('*').limit(1).single(),
-      supabase.from('requests').select('*').order('created_at', { ascending: false }),
-      supabase.from('special_contributions').select('*').order('created_at', { ascending: false }),
+      supabase.from('payments').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
+      supabase.from('burial_cases').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
+      supabase.from('payouts').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
+      supabase.from('rules_config').select('*').eq('village_id', vid).limit(1).single(),
+      supabase.from('requests').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
+      supabase.from('special_contributions').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
     ]);
     if (hRes.data) setHouseholds(hRes.data);
     if (mRes.data) setMembers(mRes.data);
@@ -69,12 +73,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (reqRes.data) setRequests(reqRes.data);
     if (scRes.data) setSpecialContributions(scRes.data);
     setLoading(false);
-  }, []);
+  }, [currentVillage]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addHousehold = async (h: TablesInsert<'households'>) => {
-    const { data, error } = await supabase.from('households').insert(h as any).select().single();
+    if (!currentVillage) return;
+    const { data, error } = await supabase.from('households').insert({ ...h, village_id: currentVillage.id } as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Household added');
     logActivity('add_household', 'household', data?.id, { name: h.name });
@@ -90,7 +95,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addPayment = async (p: TablesInsert<'payments'>) => {
-    const { data, error } = await supabase.from('payments').insert(p as any).select().single();
+    if (!currentVillage) return;
+    const { data, error } = await supabase.from('payments').insert({ ...p, village_id: currentVillage.id } as any).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Payment recorded');
     logActivity('record_payment', 'payment', data?.id, { household_id: p.household_id, amount: p.amount, month: p.payment_month });
@@ -127,9 +133,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addBurialCase = async (c: TablesInsert<'burial_cases'>) => {
+    if (!currentVillage) return;
     const { eligible, reason } = checkEligibility(c.member_id, c.household_id);
     const caseData = {
       ...c,
+      village_id: currentVillage.id,
       eligibility_status: eligible ? 'eligible' : 'not_eligible',
       eligibility_reason: reason,
     };
@@ -141,7 +149,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addPayout = async (p: TablesInsert<'payouts'>) => {
-    const { data, error } = await supabase.from('payouts').insert(p).select().single();
+    if (!currentVillage) return;
+    const { data, error } = await supabase.from('payouts').insert({ ...p, village_id: currentVillage.id }).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Payout recorded');
     logActivity('record_payout', 'payout', data?.id, { case_id: p.case_id, amount: p.approved_amount });
@@ -149,7 +158,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addRequest = async (r: any) => {
-    const { data, error } = await supabase.from('requests').insert(r).select().single();
+    if (!currentVillage) return;
+    const { data, error } = await supabase.from('requests').insert({ ...r, village_id: currentVillage.id }).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Request submitted');
     logActivity('submit_request', 'request', data?.id, { type: r.request_type, subject: r.subject });
@@ -157,7 +167,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addSpecialContribution = async (s: any) => {
-    const { data, error } = await supabase.from('special_contributions').insert(s).select().single();
+    if (!currentVillage) return;
+    const { data, error } = await supabase.from('special_contributions').insert({ ...s, village_id: currentVillage.id }).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Special contribution created');
     logActivity('create_special_contribution', 'special_contribution', data?.id, { title: s.title });

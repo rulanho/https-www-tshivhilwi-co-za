@@ -56,7 +56,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const [hRes, mRes, pRes, bcRes, poRes, rRes, reqRes, scRes] = await Promise.all([
       supabase.from('households').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
-      supabase.from('members').select('*').order('created_at', { ascending: false }),
+      supabase.from('members').select('*, households!inner(village_id)').eq('households.village_id', vid).order('created_at', { ascending: false }),
       supabase.from('payments').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
       supabase.from('burial_cases').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
       supabase.from('payouts').select('*').eq('village_id', vid).order('created_at', { ascending: false }),

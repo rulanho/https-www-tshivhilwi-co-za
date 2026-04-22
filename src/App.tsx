@@ -61,6 +61,7 @@ function VillageGate() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/villages" element={<Villages />} />
+          <Route path="/create-village" element={<CreateVillage />} />
           <Route path="/households" element={<Households />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/burial-cases" element={<BurialCases />} />

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/villages', icon: Globe, label: 'Villages' },
   { to: '/households', icon: Home, label: 'Households' },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/burial-cases', icon: Skull, label: 'Burial Cases' },
@@ -21,17 +22,13 @@ const links = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-const superAdminLinks = [
-  { to: '/villages', icon: Globe, label: 'Manage Villages' },
-];
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { signOut, profile, roles } = useAuth();
   const { villages, currentVillage, setCurrentVillageId, isSuperAdmin } = useVillage();
 
-  const allLinks = isSuperAdmin ? [...superAdminLinks, ...links] : links;
+  const allLinks = links;
 
   const villageSwitcher = villages.length > 0 ? (
     <div className="px-4 py-3 border-b border-sidebar-border">

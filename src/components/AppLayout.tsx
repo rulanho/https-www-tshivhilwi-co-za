@@ -1,25 +1,35 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity, MapPin, ChevronDown, Globe } from 'lucide-react';
+import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity, MapPin, ChevronDown, Globe, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVillage } from '@/contexts/VillageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const links = [
+type NavRole = 'admin' | 'super_admin' | 'treasurer' | 'secretary' | 'section_leader';
+
+interface NavItem {
+  to: string;
+  icon: any;
+  label: string;
+  roles?: NavRole[];
+}
+
+const links: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/villages', icon: Globe, label: 'Villages' },
-  { to: '/households', icon: Home, label: 'Households' },
-  { to: '/payments', icon: CreditCard, label: 'Payments' },
-  { to: '/burial-cases', icon: Skull, label: 'Burial Cases' },
-  { to: '/payouts', icon: Banknote, label: 'Payouts' },
+  { to: '/households', icon: Home, label: 'Households', roles: ['admin', 'super_admin', 'secretary', 'section_leader'] },
+  { to: '/payments', icon: CreditCard, label: 'Payments', roles: ['admin', 'super_admin', 'treasurer'] },
+  { to: '/burial-cases', icon: Skull, label: 'Burial Cases', roles: ['admin', 'super_admin', 'secretary', 'treasurer'] },
+  { to: '/payouts', icon: Banknote, label: 'Payouts', roles: ['admin', 'super_admin', 'treasurer'] },
   { to: '/requests', icon: MessageSquare, label: 'Community Services' },
-  { to: '/special-contributions', icon: HandCoins, label: 'Special Levies' },
-  { to: '/section-leaders', icon: Shield, label: 'Leaders & Access' },
-  { to: '/reports', icon: FileText, label: 'Reports' },
-  { to: '/activity-log', icon: Activity, label: 'Activity Log' },
+  { to: '/special-contributions', icon: HandCoins, label: 'Special Levies', roles: ['admin', 'super_admin', 'treasurer'] },
+  { to: '/section-leaders', icon: Shield, label: 'Leaders & Access', roles: ['admin', 'super_admin'] },
+  { to: '/reports', icon: FileText, label: 'Reports', roles: ['admin', 'super_admin', 'treasurer', 'secretary'] },
+  { to: '/activity-log', icon: Activity, label: 'Activity Log', roles: ['admin', 'super_admin'] },
+  { to: '/join-requests', icon: UserPlus, label: 'Join Requests', roles: ['admin', 'super_admin'] },
   { to: '/profile', icon: User, label: 'Profile' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', roles: ['admin', 'super_admin'] },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +38,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut, profile, roles } = useAuth();
   const { villages, currentVillage, setCurrentVillageId, isSuperAdmin } = useVillage();
 
-  const allLinks = links;
+  const allLinks = links.filter(link => {
+    if (!link.roles) return true;
+    return link.roles.some(r => roles.includes(r as any));
+  });
 
   const villageSwitcher = villages.length > 0 ? (
     <div className="px-4 py-3 border-b border-sidebar-border">

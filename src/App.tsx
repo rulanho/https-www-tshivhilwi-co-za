@@ -44,7 +44,15 @@ function VillageGate() {
 
   // If user has no village, show village creation
   if (villages.length === 0 && !hasRole('household_head')) {
-    return <CreateVillage />;
+    return (
+      <DataProvider>
+        <AppLayout>
+          <Routes>
+            <Route path="*" element={<CreateVillage />} />
+          </Routes>
+        </AppLayout>
+      </DataProvider>
+    );
   }
 
   return (

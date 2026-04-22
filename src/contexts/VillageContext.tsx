@@ -13,6 +13,10 @@ interface Village {
   created_by: string;
   created_at: string;
   updated_at: string;
+  chief_name: string | null;
+  chief_title: string | null;
+  chief_phone: string | null;
+  municipality_id: string | null;
 }
 
 interface VillageContextType {

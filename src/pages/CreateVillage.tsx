@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Globe, MapPin, Plus, X, LogOut, ArrowRight, ArrowLeft, Crown, Building2, Landmark, CheckCircle2 } from 'lucide-react';
+import { Globe, MapPin, Plus, X, LogOut, ArrowRight, ArrowLeft, Crown, Building2, Landmark, CheckCircle2, Home, CreditCard, Settings as SettingsIcon, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface District { id: string; name: string; }
@@ -17,10 +18,12 @@ const CHIEF_TITLES = ['Thovhele', 'Khosi', 'Hosi', 'Induna', 'Kgoshi', 'Chief', 
 
 export default function CreateVillage() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [districts, setDistricts] = useState<District[]>([]);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [created, setCreated] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -95,9 +98,54 @@ export default function CreateVillage() {
       { onConflict: 'user_id,role' }
     );
 
-    toast.success('Village registered successfully! Your community is now digital.');
-    setTimeout(() => window.location.reload(), 1200);
+    toast.success('Village registered successfully!');
+    setCreated(true);
+    setLoading(false);
   };
+
+  if (created) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          <Card>
+            <CardContent className="pt-8 pb-6 text-center space-y-4">
+              <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold font-display">🎉 {form.name} is Now Digital!</h2>
+              <p className="text-sm text-muted-foreground">Your village has been registered. Here's what to do next:</p>
+              <div className="grid gap-3 text-left pt-2">
+                <button onClick={() => window.location.href = '/households'} className="flex items-center gap-3 border rounded-lg p-3 hover:bg-muted/50 transition-colors text-left">
+                  <Home className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Add Households</p>
+                    <p className="text-xs text-muted-foreground">Register families in your village</p>
+                  </div>
+                </button>
+                <button onClick={() => window.location.href = '/settings'} className="flex items-center gap-3 border rounded-lg p-3 hover:bg-muted/50 transition-colors text-left">
+                  <SettingsIcon className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Configure Rules</p>
+                    <p className="text-xs text-muted-foreground">Set contributions, payout amounts, eligibility</p>
+                  </div>
+                </button>
+                <button onClick={() => window.location.href = '/section-leaders'} className="flex items-center gap-3 border rounded-lg p-3 hover:bg-muted/50 transition-colors text-left">
+                  <Users className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Assign Staff</p>
+                    <p className="text-xs text-muted-foreground">Add treasurer, secretary, section leaders</p>
+                  </div>
+                </button>
+              </div>
+              <Button className="w-full mt-4" onClick={() => window.location.href = '/'}>
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const stepIcons = [
     { icon: Building2, label: 'Location' },

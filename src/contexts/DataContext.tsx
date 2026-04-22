@@ -65,7 +65,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       supabase.from('special_contributions').select('*').eq('village_id', vid).order('created_at', { ascending: false }),
     ]);
     if (hRes.data) setHouseholds(hRes.data);
-    if (mRes.data) setMembers(mRes.data);
+    // Filter members to only those belonging to village households
+    if (hRes.data && mRes.data) {
+      const villageHouseholdIds = new Set(hRes.data.map(h => h.id));
+      setMembers(mRes.data.filter(m => villageHouseholdIds.has(m.household_id)));
+    }
     if (pRes.data) setPayments(pRes.data);
     if (bcRes.data) setBurialCases(bcRes.data);
     if (poRes.data) setPayouts(poRes.data);

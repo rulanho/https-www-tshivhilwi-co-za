@@ -1,4 +1,5 @@
 import { useData } from '@/contexts/DataContext';
+import { useVillage } from '@/contexts/VillageContext';
 import { formatCurrency } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Users, CreditCard, AlertTriangle, Skull, Banknote } from 'lucide-react';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Dashboard() {
   const { households, members, payments, burialCases, payouts } = useData();
+  const { currentVillage } = useVillage();
 
   const activeHouseholds = households.filter(h => h.status === 'active').length;
   const activeMembers = members.filter(m => m.status === 'active').length;
@@ -30,7 +32,7 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Overview of your village community</p>
+        <p className="page-subtitle">{currentVillage ? `${currentVillage.name} — Community Overview` : 'Community Overview'}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

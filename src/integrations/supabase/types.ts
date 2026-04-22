@@ -763,11 +763,15 @@ export type Database = {
       }
       villages: {
         Row: {
+          chief_name: string | null
+          chief_phone: string | null
+          chief_title: string | null
           created_at: string
           created_by: string
           district: string
           id: string
           municipality: string
+          municipality_id: string | null
           name: string
           sections: string[]
           status: string
@@ -775,11 +779,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          chief_name?: string | null
+          chief_phone?: string | null
+          chief_title?: string | null
           created_at?: string
           created_by: string
           district: string
           id?: string
           municipality: string
+          municipality_id?: string | null
           name: string
           sections?: string[]
           status?: string
@@ -787,18 +795,30 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          chief_name?: string | null
+          chief_phone?: string | null
+          chief_title?: string | null
           created_at?: string
           created_by?: string
           district?: string
           id?: string
           municipality?: string
+          municipality_id?: string | null
           name?: string
           sections?: string[]
           status?: string
           traditional_authority?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "villages_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -22,6 +22,7 @@ import ActivityLog from "@/pages/ActivityLog";
 import HouseholdPortal from "@/pages/HouseholdPortal";
 import Villages from "@/pages/Villages";
 import CreateVillage from "@/pages/CreateVillage";
+import JoinRequests from "@/pages/JoinRequests";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -71,6 +72,7 @@ function VillageGate() {
           <Route path="/section-leaders" element={<SectionLeaders />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/activity-log" element={<ActivityLog />} />
+          <Route path="/join-requests" element={<JoinRequests />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />

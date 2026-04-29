@@ -214,6 +214,16 @@ export default function Households() {
                   </Select>
                 </div>
                 <div><Label>Stand Number</Label><Input value={hhForm.stand_number} onChange={e => setHhForm(f => ({ ...f, stand_number: e.target.value }))} placeholder="e.g. Stand 45" /></div>
+                <div>
+                  <Label>Stand Type</Label>
+                  <Select value={hhForm.stand_type} onValueChange={v => setHhForm(f => ({ ...f, stand_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Address</Label><Input value={hhForm.address} onChange={e => setHhForm(f => ({ ...f, address: e.target.value }))} /></div>
                 <div>
                   <Label>GPS Location</Label>

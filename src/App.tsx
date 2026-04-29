@@ -23,6 +23,7 @@ import HouseholdPortal from "@/pages/HouseholdPortal";
 import Villages from "@/pages/Villages";
 import CreateVillage from "@/pages/CreateVillage";
 import JoinRequests from "@/pages/JoinRequests";
+import Ledger from "@/pages/Ledger";
 import Auth from "@/pages/Auth";
 import About from "@/pages/About";
 import NotFound from "./pages/NotFound.tsx";
@@ -198,6 +199,7 @@ function VillageGate() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/activity-log" element={<ActivityLog />} />
           <Route path="/join-requests" element={<JoinRequests />} />
+          <Route path="/ledger" element={<Ledger />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />

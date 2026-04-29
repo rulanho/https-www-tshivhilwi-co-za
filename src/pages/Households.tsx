@@ -31,7 +31,7 @@ export default function Households() {
 
   const [hhForm, setHhForm] = useState({
     name: '', contact_person: '', phone: '', address: '',
-    section: '', stand_number: '',
+    section: '', stand_number: '', stand_type: 'residential',
   });
   const [memForm, setMemForm] = useState({
     full_name: '', id_number: '', date_of_birth: '', relationship: '', household_id: '',
@@ -73,7 +73,7 @@ export default function Households() {
       status: 'active',
       ...(gpsCoords ? { gps_lat: gpsCoords.lat, gps_lng: gpsCoords.lng } : {}),
     } as any);
-    setHhForm({ name: '', contact_person: '', phone: '', address: '', section: '', stand_number: '' });
+    setHhForm({ name: '', contact_person: '', phone: '', address: '', section: '', stand_number: '', stand_type: 'residential' });
     setGpsCoords(null);
     setHhOpen(false);
   };

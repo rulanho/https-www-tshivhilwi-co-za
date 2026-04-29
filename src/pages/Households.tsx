@@ -31,7 +31,7 @@ export default function Households() {
 
   const [hhForm, setHhForm] = useState({
     name: '', contact_person: '', phone: '', address: '',
-    section: '', stand_number: '',
+    section: '', stand_number: '', stand_type: 'residential',
   });
   const [memForm, setMemForm] = useState({
     full_name: '', id_number: '', date_of_birth: '', relationship: '', household_id: '',
@@ -73,7 +73,7 @@ export default function Households() {
       status: 'active',
       ...(gpsCoords ? { gps_lat: gpsCoords.lat, gps_lng: gpsCoords.lng } : {}),
     } as any);
-    setHhForm({ name: '', contact_person: '', phone: '', address: '', section: '', stand_number: '' });
+    setHhForm({ name: '', contact_person: '', phone: '', address: '', section: '', stand_number: '', stand_type: 'residential' });
     setGpsCoords(null);
     setHhOpen(false);
   };
@@ -214,6 +214,16 @@ export default function Households() {
                   </Select>
                 </div>
                 <div><Label>Stand Number</Label><Input value={hhForm.stand_number} onChange={e => setHhForm(f => ({ ...f, stand_number: e.target.value }))} placeholder="e.g. Stand 45" /></div>
+                <div>
+                  <Label>Stand Type</Label>
+                  <Select value={hhForm.stand_type} onValueChange={v => setHhForm(f => ({ ...f, stand_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Address</Label><Input value={hhForm.address} onChange={e => setHhForm(f => ({ ...f, address: e.target.value }))} /></div>
                 <div>
                   <Label>GPS Location</Label>

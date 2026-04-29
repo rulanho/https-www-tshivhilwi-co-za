@@ -13,6 +13,7 @@ import { REQUEST_TYPES } from '@/lib/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
 import { supabase } from '@/integrations/supabase/client';
+import { useVillage } from '@/contexts/VillageContext';
 
 interface SectionLeader {
   section: string;
@@ -23,6 +24,7 @@ interface SectionLeader {
 export default function Requests() {
   const { households, members, requests, addRequest, updateRequestStatus } = useData();
   const { roles } = useAuth();
+  const { currentVillage } = useVillage();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
@@ -69,10 +71,12 @@ export default function Requests() {
     if (!hh) return;
     const approvedAt = req.approved_at || req.resolved_at;
     const leader = sectionLeaders.find(l => l.section === hh.section);
+    if (!currentVillage) return;
     generateProofOfAddress({
       householdName: hh.name,
       contactPerson: hh.contact_person,
       standNumber: hh.stand_number || '',
+      standType: (hh as any).stand_type,
       section: hh.section || '',
       address: hh.address || '',
       gpsLat: hh.gps_lat ?? undefined,
@@ -82,6 +86,15 @@ export default function Requests() {
       requestId: req.id,
       leaderName: leader?.full_name,
       leaderPhone: leader?.phone ?? undefined,
+      communityName: currentVillage.name,
+      district: currentVillage.district,
+      municipality: currentVillage.municipality,
+      chiefName: currentVillage.chief_name ?? undefined,
+      chiefTitle: currentVillage.chief_title ?? undefined,
+      chiefPhone: currentVillage.chief_phone ?? undefined,
+      villageId: currentVillage.id,
+      householdId: hh.id,
+      memberId: req.member_id ?? undefined,
     });
   };
 

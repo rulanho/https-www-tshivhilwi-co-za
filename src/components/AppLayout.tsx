@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity, MapPin, ChevronDown, Globe, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Home, CreditCard, Skull, Banknote, Settings, Menu, X, FileText, User, LogOut, MessageSquare, HandCoins, Shield, Activity, MapPin, ChevronDown, Globe, UserPlus, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ const links: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/villages', icon: Globe, label: 'Villages' },
   { to: '/households', icon: Home, label: 'Households', roles: ['admin', 'super_admin', 'secretary', 'section_leader'] },
+  { to: '/ledger', icon: BookOpen, label: 'Community Ledger', roles: ['admin', 'super_admin', 'secretary', 'treasurer'] },
   { to: '/payments', icon: CreditCard, label: 'Payments', roles: ['admin', 'super_admin', 'treasurer'] },
   { to: '/burial-cases', icon: Skull, label: 'Burial Cases', roles: ['admin', 'super_admin', 'secretary', 'treasurer'] },
   { to: '/payouts', icon: Banknote, label: 'Payouts', roles: ['admin', 'super_admin', 'treasurer'] },

@@ -21,6 +21,7 @@ interface HouseholdData {
   id: string; name: string; contact_person: string; phone: string | null;
   section: string | null; stand_number: string | null; address: string | null;
   join_date: string; status: string; gps_lat: number | null; gps_lng: number | null;
+  village_id?: string | null; stand_type?: string | null;
 }
 
 function GPSButton({ household, onUpdate }: { household: HouseholdData; onUpdate: () => void }) {
@@ -65,6 +66,7 @@ export default function HouseholdPortal() {
   const [payments, setPayments] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [sectionLeaders, setSectionLeaders] = useState<any[]>([]);
+  const [village, setVillage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [requestForm, setRequestForm] = useState({ request_type: 'general', subject: '', description: '' });
@@ -95,6 +97,10 @@ export default function HouseholdPortal() {
       if (payRes.data) setPayments(payRes.data);
       if (reqRes.data) setRequests(reqRes.data);
       if (leadRes.data) setSectionLeaders(leadRes.data);
+      if (hh.village_id) {
+        const { data: v } = await supabase.from('villages').select('*').eq('id', hh.village_id).single();
+        if (v) setVillage(v);
+      }
     }
     setLoading(false);
   };
@@ -115,13 +121,14 @@ export default function HouseholdPortal() {
   };
 
   const handleDownloadProof = (req: any) => {
-    if (!household) return;
+    if (!household || !village) { toast.error('Village info not loaded'); return; }
     const approvedAt = req.approved_at || req.resolved_at;
     const leader = sectionLeaders.find((l: any) => l.section === household.section);
     generateProofOfAddress({
       householdName: household.name,
       contactPerson: household.contact_person,
       standNumber: household.stand_number || '',
+      standType: household.stand_type || undefined,
       section: household.section || '',
       address: household.address || '',
       gpsLat: household.gps_lat ?? undefined,
@@ -131,6 +138,14 @@ export default function HouseholdPortal() {
       requestId: req.id,
       leaderName: leader?.full_name,
       leaderPhone: leader?.phone ?? undefined,
+      communityName: village.name,
+      district: village.district,
+      municipality: village.municipality,
+      chiefName: village.chief_name ?? undefined,
+      chiefTitle: village.chief_title ?? undefined,
+      chiefPhone: village.chief_phone ?? undefined,
+      villageId: village.id,
+      householdId: household.id,
     });
   };
 

@@ -221,7 +221,14 @@ function ProtectedRoutes() {
     );
   }
 
-  if (!user) return <Auth />;
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/about" element={<About />} />
+        <Route path="*" element={<Auth />} />
+      </Routes>
+    );
+  }
 
   // Household heads get their own portal
   const isHouseholdOnly = hasRole('household_head') && !hasRole('admin') && !hasRole('treasurer') && !hasRole('secretary');

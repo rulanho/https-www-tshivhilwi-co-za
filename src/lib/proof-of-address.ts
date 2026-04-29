@@ -1,7 +1,11 @@
+import QRCode from 'qrcode';
+import { supabase } from '@/integrations/supabase/client';
+
 export interface ProofOfAddressData {
   householdName: string;
   contactPerson: string;
   standNumber: string;
+  standType?: string;
   section: string;
   address: string;
   gpsLat?: number;
@@ -11,16 +15,64 @@ export interface ProofOfAddressData {
   requestId: string;
   leaderName?: string;
   leaderPhone?: string;
-  leaderSignature?: string; // base64 data URL or text name for digital signature
+  leaderSignature?: string;
+  // Community / chief metadata (multi-tenant)
+  communityName: string;
+  district?: string;
+  municipality?: string;
+  chiefName?: string;
+  chiefTitle?: string;
+  chiefPhone?: string;
+  // Issuance tracking
+  villageId: string;
+  householdId?: string;
+  memberId?: string;
 }
 
-export function generateProofOfAddress(data: ProofOfAddressData) {
+function makeReference(communityName: string) {
+  const prefix = (communityName || 'CDR').replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() || 'CDR';
+  const ts = Date.now().toString(36).toUpperCase();
+  const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `${prefix}-${ts}-${rnd}`;
+}
+
+export async function generateProofOfAddress(data: ProofOfAddressData) {
   const issueDate = new Date(data.approvedAt).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
   const expiryDate = new Date(data.expiresAt).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
   const expiryShort = new Date(data.expiresAt).toLocaleDateString('en-ZA');
 
-  const chiefName = 'Rulani Nevhufumba';
-  const chiefPhone = '071 890 0425';
+  const chiefName = data.chiefName || 'Community Leader';
+  const chiefTitle = data.chiefTitle || 'Chief';
+  const chiefPhone = data.chiefPhone || '';
+  const community = data.communityName;
+
+  // Generate unique reference + QR code
+  const reference = makeReference(community);
+  const verifyPayload = JSON.stringify({
+    ref: reference,
+    name: data.householdName,
+    stand: data.standNumber,
+    village: community,
+    issued: data.approvedAt,
+    expires: data.expiresAt,
+  });
+  let qrDataUrl = '';
+  try {
+    qrDataUrl = await QRCode.toDataURL(verifyPayload, { margin: 1, width: 140 });
+  } catch { /* ignore */ }
+
+  // Log issuance (best-effort)
+  try {
+    await supabase.from('documents').insert({
+      village_id: data.villageId,
+      household_id: data.householdId || null,
+      member_id: data.memberId || null,
+      document_type: 'proof_of_address',
+      reference_number: reference,
+      issued_to_name: data.contactPerson,
+      payload: { stand_number: data.standNumber, section: data.section, expires_at: data.expiresAt } as any,
+    } as any);
+  } catch { /* non-blocking */ }
 
   const signatureBlock = `<div style="margin-top:10px; font-family: 'Brush Script MT', cursive; font-size: 28px; color: #1a3a5c;">${chiefName}</div>`;
 
@@ -57,15 +109,20 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
         .expiry { color: #c00; font-weight: bold; font-size: 13px; margin-top: 20px; border: 1px solid #fcc; background: #fff5f5; padding: 8px 12px; border-radius: 4px; }
         .ref { font-size: 11px; color: #777; margin-top: 15px; border-top: 1px solid #eee; padding-top: 8px; }
         .leader-contact { background: #f0f4f8; padding: 10px 14px; border-radius: 4px; margin-top: 20px; font-size: 12px; }
+        .qr-block { position: absolute; top: 30px; right: 30px; text-align: center; }
+        .qr-block img { width: 90px; height: 90px; }
+        .qr-block .qr-label { font-size: 9px; color: #555; margin-top: 4px; }
       </style>
     </head>
     <body>
-      <div class="watermark">TSHIVHILWI</div>
+      <div class="watermark">${community.toUpperCase()}</div>
       
+      ${qrDataUrl ? `<div class="qr-block"><img src="${qrDataUrl}" alt="QR" /><div class="qr-label">Scan to verify<br/>${reference}</div></div>` : ''}
+
       <div class="header">
-        <h1>Tshivhilwi Village Traditional Authority</h1>
+        <h1>${community} Traditional Authority</h1>
         <p>Proof of Residential Address</p>
-        <p class="subtitle">Limpopo Province, South Africa</p>
+        <p class="subtitle">${data.municipality ? data.municipality + ', ' : ''}${data.district || 'Limpopo'} Province, South Africa</p>
       </div>
 
       <div class="title">CONFIRMATION OF RESIDENTIAL ADDRESS</div>
@@ -78,8 +135,9 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
             <tr><td>Household Name</td><td>${data.householdName}</td></tr>
             <tr><td>Head of Household</td><td>${data.contactPerson}</td></tr>
             <tr><td>Stand Number</td><td>${data.standNumber || 'N/A'}</td></tr>
+            ${data.standType ? `<tr><td>Stand Type</td><td>${data.standType.charAt(0).toUpperCase() + data.standType.slice(1)}</td></tr>` : ''}
             <tr><td>Section</td><td>${data.section || 'N/A'}</td></tr>
-            <tr><td>Physical Address</td><td>${data.address || 'Tshivhilwi Village, Limpopo'}</td></tr>
+            <tr><td>Physical Address</td><td>${data.address || `${community}, ${data.district || 'Limpopo'}`}</td></tr>
             ${data.gpsLat ? `<tr><td>GPS Coordinates</td><td>${data.gpsLat.toFixed(6)}, ${data.gpsLng?.toFixed(6)}</td></tr>` : ''}
             ${data.gpsLat ? `<tr><td>Map Link</td><td><a href="https://www.google.com/maps?q=${data.gpsLat},${data.gpsLng}" style="color:#1a3a5c;">View on Google Maps</a></td></tr>` : ''}
             <tr><td>Date Issued</td><td>${issueDate}</td></tr>
@@ -87,7 +145,7 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
           </table>
         </div>
 
-        <p>This letter is issued upon request and serves as proof that the above-mentioned person is a bona fide resident of Tshivhilwi Village.</p>
+        <p>This letter is issued upon request and serves as proof that the above-mentioned person is a bona fide resident of ${community}.</p>
 
         <p class="expiry">⚠ This document expires on ${expiryShort} and must be renewed thereafter.</p>
 
@@ -96,8 +154,8 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
             <div class="sig-block">
               ${signatureBlock}
               <div class="signature-line">
-                Chief: ${chiefName}<br/>
-                Contact: ${chiefPhone}
+                ${chiefTitle}: ${chiefName}<br/>
+                ${chiefPhone ? `Contact: ${chiefPhone}` : ''}
               </div>
               ${leaderContactBlock}
             </div>
@@ -110,14 +168,14 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
 
           <div style="text-align: center; margin-top: 30px;">
             <div class="stamp">
-              TSHIVHILWI VILLAGE<br/>TRADITIONAL AUTHORITY<br/>OFFICIAL STAMP
+              ${community.toUpperCase()}<br/>TRADITIONAL AUTHORITY<br/>OFFICIAL STAMP
             </div>
           </div>
         </div>
 
         <p class="ref">
-          Reference: ${data.requestId.substring(0, 8).toUpperCase()}<br/>
-          Generated electronically by Tshivhilwi Village Management System
+          Reference: <strong>${reference}</strong><br/>
+          Generated electronically by ${community} Community Digital Register
         </p>
       </div>
     </body>
@@ -130,6 +188,7 @@ export function generateProofOfAddress(data: ProofOfAddressData) {
     printWindow.document.close();
     printWindow.onload = () => printWindow.print();
   }
+  return reference;
 }
 
 export function isProofExpired(approvedAt: string): boolean {

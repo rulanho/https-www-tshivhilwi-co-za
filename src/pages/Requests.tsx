@@ -13,6 +13,7 @@ import { REQUEST_TYPES } from '@/lib/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateProofOfAddress, isProofExpired, getExpiryDate } from '@/lib/proof-of-address';
 import { supabase } from '@/integrations/supabase/client';
+import { useVillage } from '@/contexts/VillageContext';
 
 interface SectionLeader {
   section: string;
@@ -23,6 +24,7 @@ interface SectionLeader {
 export default function Requests() {
   const { households, members, requests, addRequest, updateRequestStatus } = useData();
   const { roles } = useAuth();
+  const { currentVillage } = useVillage();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);

@@ -24,6 +24,7 @@ import Villages from "@/pages/Villages";
 import CreateVillage from "@/pages/CreateVillage";
 import JoinRequests from "@/pages/JoinRequests";
 import Auth from "@/pages/Auth";
+import About from "@/pages/About";
 import NotFound from "./pages/NotFound.tsx";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Globe, Plus, Search, UserPlus, Landmark, LogOut } from "lucide-react";
+import { Globe, Plus, Search, UserPlus, Landmark, LogOut, Info } from "lucide-react";
 import { toast } from "sonner";
 
 const queryClient = new QueryClient();
@@ -109,6 +110,11 @@ function NoVillageGate() {
         <Button variant="ghost" size="sm" className="mt-6" onClick={signOut}>
           <LogOut className="h-4 w-4 mr-2" />Sign Out
         </Button>
+        <div className="mt-2">
+          <a href="/about" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <Info className="h-3 w-3" />What is VillageConnect?
+          </a>
+        </div>
 
         <Dialog open={browseOpen} onOpenChange={setBrowseOpen}>
           <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
@@ -179,6 +185,7 @@ function VillageGate() {
       <AppLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/about" element={<About />} />
           <Route path="/villages" element={<Villages />} />
           <Route path="/create-village" element={<CreateVillage />} />
           <Route path="/households" element={<Households />} />

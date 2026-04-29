@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Users, ShieldCheck, Home } from 'lucide-react';
+import { Loader2, Users, ShieldCheck, Home, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Auth() {
   const { signIn } = useAuth();
@@ -86,6 +87,9 @@ export default function Auth() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-display">VillageConnect Limpopo</CardTitle>
           <p className="text-sm text-muted-foreground">Multi-Community Management Platform</p>
+          <Link to="/about" className="mt-2 inline-flex items-center justify-center gap-1 text-xs text-primary hover:underline">
+            <Info className="h-3 w-3" />Learn what VillageConnect is
+          </Link>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>

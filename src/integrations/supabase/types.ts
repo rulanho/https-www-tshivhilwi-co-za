@@ -143,6 +143,45 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          household_id: string | null
+          id: string
+          issued_by: string | null
+          issued_to_name: string | null
+          member_id: string | null
+          payload: Json | null
+          reference_number: string
+          village_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          household_id?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_to_name?: string | null
+          member_id?: string | null
+          payload?: Json | null
+          reference_number: string
+          village_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          household_id?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_to_name?: string | null
+          member_id?: string | null
+          payload?: Json | null
+          reference_number?: string
+          village_id?: string
+        }
+        Relationships: []
+      }
       household_access_codes: {
         Row: {
           access_code: string
@@ -195,6 +234,7 @@ export type Database = {
           phone: string | null
           section: string | null
           stand_number: string | null
+          stand_type: string
           status: string
           updated_at: string
           village_id: string | null
@@ -212,6 +252,7 @@ export type Database = {
           phone?: string | null
           section?: string | null
           stand_number?: string | null
+          stand_type?: string
           status?: string
           updated_at?: string
           village_id?: string | null
@@ -229,6 +270,7 @@ export type Database = {
           phone?: string | null
           section?: string | null
           stand_number?: string | null
+          stand_type?: string
           status?: string
           updated_at?: string
           village_id?: string | null
@@ -242,6 +284,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ledger_entries: {
+        Row: {
+          amount: number | null
+          created_at: string
+          description: string | null
+          entry_date: string
+          entry_type: string
+          household_id: string | null
+          id: string
+          member_id: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          village_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          entry_type?: string
+          household_id?: string | null
+          id?: string
+          member_id?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          village_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          entry_type?: string
+          household_id?: string | null
+          id?: string
+          member_id?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          village_id?: string
+        }
+        Relationships: []
       }
       members: {
         Row: {

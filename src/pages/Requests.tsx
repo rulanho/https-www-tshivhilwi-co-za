@@ -69,10 +69,12 @@ export default function Requests() {
     if (!hh) return;
     const approvedAt = req.approved_at || req.resolved_at;
     const leader = sectionLeaders.find(l => l.section === hh.section);
+    if (!currentVillage) return;
     generateProofOfAddress({
       householdName: hh.name,
       contactPerson: hh.contact_person,
       standNumber: hh.stand_number || '',
+      standType: (hh as any).stand_type,
       section: hh.section || '',
       address: hh.address || '',
       gpsLat: hh.gps_lat ?? undefined,
@@ -82,6 +84,15 @@ export default function Requests() {
       requestId: req.id,
       leaderName: leader?.full_name,
       leaderPhone: leader?.phone ?? undefined,
+      communityName: currentVillage.name,
+      district: currentVillage.district,
+      municipality: currentVillage.municipality,
+      chiefName: currentVillage.chief_name ?? undefined,
+      chiefTitle: currentVillage.chief_title ?? undefined,
+      chiefPhone: currentVillage.chief_phone ?? undefined,
+      villageId: currentVillage.id,
+      householdId: hh.id,
+      memberId: req.member_id ?? undefined,
     });
   };
 

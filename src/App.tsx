@@ -26,6 +26,7 @@ import JoinRequests from "@/pages/JoinRequests";
 import Ledger from "@/pages/Ledger";
 import Auth from "@/pages/Auth";
 import About from "@/pages/About";
+import Landing from "@/pages/Landing";
 import NotFound from "./pages/NotFound.tsx";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";

@@ -227,8 +227,10 @@ function ProtectedRoutes() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/about" element={<About />} />
-        <Route path="*" element={<Auth />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="*" element={<Landing />} />
       </Routes>
     );
   }

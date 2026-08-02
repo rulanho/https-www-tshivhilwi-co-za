@@ -251,7 +251,8 @@ function ProtectedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
       <AuthProvider>
         <Toaster />
         <Sonner />
@@ -259,7 +260,8 @@ const App = () => (
           <ProtectedRoutes />
         </BrowserRouter>
       </AuthProvider>
-    </TooltipProvider>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

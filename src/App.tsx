@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { VillageProvider, useVillage } from "@/contexts/VillageContext";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Households from "@/pages/Households";
@@ -251,7 +252,8 @@ function ProtectedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
       <AuthProvider>
         <Toaster />
         <Sonner />
@@ -259,7 +261,8 @@ const App = () => (
           <ProtectedRoutes />
         </BrowserRouter>
       </AuthProvider>
-    </TooltipProvider>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
